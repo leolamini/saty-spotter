@@ -998,11 +998,12 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     /* Recomputed from logs every time, so new thresholds apply to existing saves. */
     var xs = logs.filter(function (l) { return skillOfLog(l) === id; });
     if (!xs.length) return "new";
-    /* Basics at 10/10 (or 10 straight) are mastered. Do not hold them at learning for want of 20 attempts. */
+    /* 10/10 last-10 mastered is ONLY for ribbon / fence / side. Q1 and later skills never use that shortcut. */
     if (isBasicSkill(id) && xs.length >= BASIC_MASTER_MIN) {
       var b = recentAcc(xs, BASIC_MASTER_MIN);
       if (b.n >= BASIC_MASTER_MIN && b.acc >= BASIC_MASTER_ACC) return "mastered";
     }
+    /* Q1 and later: mastered only if the last 20 attempts are at least 90%. The 10/10 basics shortcut never applies here. */
     if (xs.length >= MASTER_MIN) {
       var m = recentAcc(xs, MASTER_N);
       if (m.n >= MASTER_MIN && m.acc >= MASTER_ACC) return "mastered";
@@ -1293,7 +1294,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     var xs = (sv.logs || []).filter(function (l) { return skillOfLog(l) === id; }).slice(-n);
     var ok = 0;
     for (var i = 0; i < xs.length; i++) if (xs[i].correct) ok += 1;
-    return { n: xs.length, acc: acc(ok, xs.length) };
+    return { n: xs.length, acc: acc(ok, xs.length), ok: ok };
   }
 
   function q1NeedsDrill(sv) {
@@ -1922,7 +1923,12 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       var st = skillStats(save, def.id);
       var bit = (save.skills && save.skills[def.id]) || null;
       var lvl = skillMeter(save.logs, def.id, bit);
-      lines.push("• " + def.label + " — " + lvl + ", " + pct(st.ok, st.n) + (st.n ? " (" + st.n + ")" : " (none yet)"));
+      var recent = lastSkillAcc(save, def.id, 20);
+      var accBit;
+      if (!st.n) accBit = "— (none yet)";
+      else if (recent.n >= 20) accBit = pct(recent.ok, recent.n) + " last " + recent.n + ", " + pct(st.ok, st.n) + " overall (" + st.n + ")";
+      else accBit = pct(st.ok, st.n) + " (" + st.n + ")";
+      lines.push("• " + def.label + " — " + lvl + ", " + accBit);
     });
 
     var conf = {};
@@ -2100,7 +2106,8 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     var i, b, hitStop, hitTgt;
     for (i = start; i < s.bars.length; i++) {
       b = s.bars[i];
-      hitStop = dir > 0 ? b.l <= stopPx : b.h >= stopPx;
+      /* Stops fill on a 15-minute CLOSE through the level (the taught Saty rule), not a wick. Targets fill on a tag (wick). If both happen on the same bar, the stop wins. */
+      hitStop = dir > 0 ? b.c <= stopPx : b.c >= stopPx;
       hitTgt = dir > 0 ? b.h >= tgtPx : b.l <= tgtPx;
       if (hitStop && hitTgt) { exitPx = stopPx; reason = "stop"; hitBar = i; break; }
       if (hitStop) { exitPx = stopPx; reason = "stop"; hitBar = i; break; }
@@ -2138,7 +2145,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       var copy = sortCandidates(xs, false);
       return copy.slice(0, n);
     }
-    var out = take(trades, 6).concat(take(skips, 4));
+    var out = take(trades, 5).concat(take(skips, 5));
     if (out.length < 8) {
       var rest = sortCandidates(ALL.filter(function (s) { return !taken[s.id]; }), false);
       out = out.concat(rest);
@@ -2432,6 +2439,15 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       .sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
   }
 
+  function l2ReasonLabel(reason) {
+    if (reason === "stop") return "stopped on a 15-minute close";
+    if (reason === "target") return "tagged the target";
+    if (reason === "time") return "time — no close-stop or target tag in the next 3 hours";
+    if (reason === "wait") return "waited";
+    if (reason === "no-trade") return "no trade";
+    return reason || "";
+  }
+
   function fmtR(r) {
     if (r == null || !isFinite(r)) return "—";
     var sign = r > 0 ? "+" : "";
@@ -2455,6 +2471,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       html += "<h2>Level 2 — Trade it</h2>";
       html += "<p class=\"prompt\">Replay a real 15-minute tape, then take the trade or stand aside. Stops and targets follow Saty's rules. A good decision still counts if the outcome is a loser.</p>";
       if (!unlocked) html += '<p class="muted">Q1 is not yet at 80% over the last 20. You can still practice trades.</p>';
+      html += '<p class="muted">Stops fill when a 15-minute bar closes through them — the Saty rule — not on a wick. Earlier practice P&amp;L used wick fills; new trades use closes.</p>';
       html += '<p class="ran-cue">Practice P&amp;L: ' + esc(fmtR(L.rSum)) + " · " + esc(fmtUsd(L.rSum * L2_PLAN_R)) + " at $20/R (1 MNQ, $1.50 costs) · process " + l2ProcessPct(L) + "%</p>";
       html += '<button type="button" class="opt tone-long" id="l2-start">Start a session</button>';
       html += '<button type="button" class="opt tone-none" id="l2-back">Back to spotting</button>';
@@ -2520,7 +2537,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       var taken = rec.pick === "L" || rec.pick === "S";
       var tone = rec.okSetup ? "ok" : "bad";
       if (taken) {
-        html += '<div class="verdict ' + (rec.r >= 0 ? "ok" : "bad") + '">Outcome ' + esc(fmtR(rec.r)) + " · " + esc(fmtUsd(rec.planDollars)) + " at $20/R · " + esc(rec.reason) + "</div>";
+        html += '<div class="verdict ' + (rec.r >= 0 ? "ok" : "bad") + '">Outcome ' + esc(fmtR(rec.r)) + " · " + esc(fmtUsd(rec.planDollars)) + " at $20/R · " + esc(l2ReasonLabel(rec.reason)) + "</div>";
         html += '<p class="muted">1 MNQ at $2/point, minus $1.50 costs. Contract P&amp;L: ' + esc(fmtUsd(rec.dollars)) + ". Practice P&amp;L uses $20/R.</p>";
       } else {
         html += '<div class="verdict ' + tone + '">' + (rec.okSetup ? "No trade — that's the right call." : "That was a setup. Passing missed it.") + "</div>";
