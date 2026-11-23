@@ -440,9 +440,9 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     "s121": "s187"
   };
   var LOOK_RULE = [
-    "Fresh = the first close beyond the trigger was on this bar or the last bar, and it has not pulled back yet.",
-    "Pullback = it already broke and tagged 38.2 earlier, and is now pulling back toward the 8 EMA or the trigger.",
-    "Neither = no first close in the last 2 bars, or chop inside — including a stale old break with no pullback, or a move already at 61.8."
+    "Fresh = the first close beyond the call or put trigger (23.6) was on this bar or the last bar, and it has not pulled back yet.",
+    "Pullback = it already broke and tagged the Golden Gate (38.2), and is now pulling back toward the ribbon (8 / 21 / 34) or the trigger.",
+    "Neither = no first close in the last 2 bars, or chop inside — including a stale old break with no pullback, or a move already at full range (1 ATR). Mid-range 61.8 is the first target, not 'too late.'"
   ];
 
   var SKILL_DEFS = [
@@ -451,7 +451,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     { id: "side", label: "ribbon side" },
     { id: "fresh-pull", label: "fresh vs pullback" },
     { id: "fresh-stale", label: "fresh vs stale" },
-    { id: "extended", label: "past 61.8" },
+    { id: "extended", label: "past 1 ATR" },
     { id: "gg", label: "Golden Gate" }
   ];
 
@@ -475,7 +475,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
   ];
   var Q2F_OPTS = [
     { v: "F", l: "First close past the trigger" },
-    { v: "X", l: "Already past 61.8 (too late)" }
+    { v: "X", l: "Already past 1 ATR (full range — too late to chase)" }
   ];
   var Q3_OPTS = [
     { v: "Y", l: "Yes, Golden Gate" },
@@ -485,24 +485,24 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
   var TAG_WHY = {
     tw: "The ribbon is twisted or flat, so we stay out.",
     in: "Price is still inside the trigger fence. No trade yet.",
-    st: "This is a stale break: the first close already happened, and there is no 38.2 tag/pullback setup. That is not a Golden Gate. No trade.",
-    ex: "Price already ran to or through 61.8. Too late to chase. This is not stale: stale is an old break that never set up a 38.2 pullback.",
+    st: "This is a stale break: the first close already happened, and there is no Golden Gate (38.2) tag and ribbon pullback. No trade.",
+    ex: "Price already reached full range (1 ATR). Too late to chase the day-mode move. Mid-range 61.8 is the first profit target, not 'too late.' Stale is an old break with no 38.2 pullback setup.",
     dg: "The ribbon points the other way. Don't fade it.",
     nh: "It tagged a level, but it did not hold the fast EMA. No trade.",
     nc: "The ribbon is clear, but price has not closed through the trigger yet. Wait.",
-    tr: "First close past the trigger, and the ribbon agrees. That's a Trigger trade. First target is 38.2.",
-    gg: "It tagged 38.2, pulled back to the fast EMA, and held, still past the trigger. That's a Golden Gate. Target is 61.8."
+    tr: "First close past the call or put trigger, and the ribbon agrees. That's a Trigger trade. First official target is mid-range 61.8 (the Golden FIB). Full range (1 ATR) is the ideal. 38.2 is the Golden Gate — a first scale, not the official target.",
+    gg: "Golden Gate is the 38.2 level. Once it is tagged, there is about a 60% chance of reaching 61.8 (the Golden FIB). A typical entry is a pullback to the ribbon (8 / 21 / 34) with clear trend. Scale at 50 or 61.8; runners can go for 1 ATR."
   };
   var MINI = {
     tw: "If the 8, 21, and 34 are tangled or flat, the light is yellow. Do not pick a side. Wait until the ribbon fans green or red.",
-    in: "The trigger fence is the box between +23.6 and −23.6. A close still inside that box is not a Trigger trade.",
-    st: "Stale means the first close already happened, and there is no 38.2 tag and pullback-to-the-8 setup. No trade. If you do have a 38.2 tag and a hold of the 8, that is a Golden Gate, not a stale Trigger.",
-    ex: "If price is already at or through 61.8, the move is extended. Do not chase the last bit. Extended is not the same as stale: stale is an old break with no 38.2 pullback setup.",
+    in: "The fence is the box between the call trigger (+23.6) and the put trigger (−23.6). A close still inside that box is not a Trigger trade.",
+    st: "Stale means the first close already happened, and there is no Golden Gate setup (38.2 tagged, then a ribbon pullback). No trade.",
+    ex: "If price is already at or through 1 ATR, the day-mode move is at full range. Too late to chase. Mid-range 61.8 is the first profit target, not 'too late.' Stale is an old break with no 38.2 pullback setup.",
     dg: "Trade with the ribbon, never against it. A red ribbon plus a bounce through the upper trigger is not a long.",
-    nh: "For a Golden Gate, price must tag 38.2, come back to the fast EMA (the 8), and hold, still beyond the trigger. No hold means no trade.",
-    nc: "A clear ribbon is only step one. Wait for a 15-minute close through the trigger, or a 38.2 tag and pullback.",
-    tr: "Green or red ribbon, then the first close through the trigger in that direction, before 38.2. Target 38.2. Stop if a 15-minute bar closes back through the trigger.",
-    gg: "After 38.2 is tagged, look for a pullback to the 8 EMA that holds, still past the trigger, and not already at 61.8. Target is 61.8 (50 is an allowed first scale)."
+    nh: "After the Golden Gate (38.2) is tagged, look for a pullback to the ribbon that holds with trend. No hold means no trade.",
+    nc: "A clear ribbon is only step one. Wait for a close through the call or put trigger, or a Golden Gate (38.2) tag and ribbon pullback.",
+    tr: "Green or red ribbon, then the first close through the call or put trigger in that direction. First official target is mid-range 61.8. Full range (1 ATR) is the ideal. 38.2 is a first scale. A structured futures stop is a 15-minute close back through the trigger — Saty also uses ribbon / previous-close stops with a little room.",
+    gg: "Golden Gate is the 38.2 level: about a 60% chance of reaching 61.8 (the Golden FIB) once 38.2 is tagged. Look for a pullback to the ribbon (8 / 21 / 34) with clear trend. Scale at 50 or 61.8; runners can go for 1 ATR."
   };
 
   function b64bytes(s) {
@@ -652,7 +652,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
 
   function lookWant(s) {
     /* Fresh only if this is the first close (q2=F), which means it happened in the last FRESH_BARS.
-       Extended (q2=X) is not fresh: the first close was earlier, and price already ran to 61.8. */
+       Extended (q2=X) is not fresh: the first close was earlier. "Too late" means full range (1 ATR), not mid-range 61.8. */
     if (s.q3 === "Y" || s.tag === "nh") return "P";
     if (s.q2 === "F") return "B";
     return "N";
@@ -663,7 +663,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     if (q === "q2a") return s.q2 === "I" || s.q2 === "W" ? "N" : "Y";
     if (q === "q2b") return s.q2 === "D" ? "N" : "Y";
     if (q === "qlook") return lookWant(s);
-    if (q === "q2f") return s.q2 === "X" ? "X" : "F";
+    if (q === "q2f") return atFullRange(s) ? "X" : "F";
     if (q === "q3") return s.q3;
     return s.code;
   }
@@ -692,11 +692,11 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
 
   function promptOf(q) {
     if (q === "q1") return "Look at the ribbon. Is it green and fanned up, red and fanned down, or twisted / flat?";
-    if (q === "q2a") return "Did a 15-minute bar close outside the fence (the box between +23.6 and −23.6)?";
+    if (q === "q2a") return "Did a 15-minute bar close outside the fence (call trigger +23.6 / put trigger −23.6)?";
     if (q === "q2b") return "If it closed outside, was it out the side the ribbon points?";
     if (q === "qlook") return "What are you looking at? A fresh break, a pullback after a break, or neither?";
-    if (q === "q2f") return "Is this the first 15-minute close past the trigger, or has price already run to 61.8?";
-    if (q === "q3") return "This is a pullback after a break. Did price tag 38.2, then pull back to the fast EMA (the 8) and hold, still beyond the trigger?";
+    if (q === "q2f") return "Is this the first close past the trigger, or has price already reached full range (1 ATR)? Mid-range 61.8 is the first target, not 'too late.'";
+    if (q === "q3") return "Golden Gate is the 38.2 level (~60% chance of reaching the 61.8 Golden FIB). After tagging 38.2, did price pull back to the ribbon and hold a valid entry?";
     return "What are you looking at?";
   }
 
@@ -785,7 +785,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     if (id === "side") return similar ? s.q2 === "D" : s.q2 !== "D";
     if (id === "fresh-pull") return similar ? look === "B" || look === "P" : look === "N";
     if (id === "fresh-stale") return similar ? s.tag === "st" || (s.q2 === "F" && s.tag === "tr") : s.tag === "gg" || s.tag === "ex" || s.tag === "nh";
-    if (id === "extended") return similar ? s.tag === "ex" : s.tag === "tr" || s.tag === "st";
+    if (id === "extended") return similar ? atFullRange(s) : !atFullRange(s) && (s.tag === "tr" || s.tag === "st" || s.tag === "ex");
     return similar ? s.tag === "gg" : s.tag === "nh" || s.tag === "st" || s.tag === "tr";
   }
 
@@ -793,6 +793,24 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     if (s.q1 === "G") return "long";
     if (s.q1 === "R") return "short";
     return null;
+  }
+
+  function atFullRange(s) {
+    var last = s.bars[N_VIS - 1];
+    var lv = s.levels;
+    var side = ribbonSide(s);
+    if (side === "short") return last.c <= lv.m100;
+    if (side === "long") return last.c >= lv.p100;
+    return last.c >= lv.p100 || last.c <= lv.m100;
+  }
+
+  function atMidRange(s) {
+    var last = s.bars[N_VIS - 1];
+    var lv = s.levels;
+    var side = ribbonSide(s);
+    if (side === "short") return last.c <= lv.m618;
+    if (side === "long") return last.c >= lv.p618;
+    return last.c >= lv.p618 || last.c <= lv.m618;
   }
 
   function currentCross(s, side) {
@@ -884,8 +902,9 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     if (look === "P") {
       return "It already broke and tagged 38.2 earlier. Now it is pulling back toward the 8 EMA or the trigger. That's a pullback.";
     }
-    if (s.tag === "ex") {
-      return ran + " Price already ran to 61.8. That's neither — too late, not a fresh break.";
+    if (atFullRange(s) || s.tag === "ex") {
+      if (atFullRange(s)) return ran + " Price already reached full range (1 ATR). That's neither — too late to chase the day-mode move. Mid-range 61.8 is the first target, not the end.";
+      return ran + " Price is at mid-range (61.8), the first official profit target. Full range is 1 ATR, so this is not automatically 'too late.' It is not a fresh break.";
     }
     if (s.tag === "st") {
       return ran + " There is no pullback to the 8 after a 38.2 tag. That's neither (a stale break).";
@@ -954,23 +973,23 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     }
     if (id === "fresh-stale") {
       return [
-        s.q2 === "F" ? "This is the first 15-minute close through the trigger. That is the only close that counts for a Trigger trade." : "The first close already happened earlier. An old break with no 38.2 tag and pullback to the 8 is stale. No trade.",
-        "Stale is not the same as extended: extended means price already ran to 61.8."
+        s.q2 === "F" && !atFullRange(s) ? "This is the first close through the trigger. That is the close that counts for a Trigger trade." : "The first close already happened earlier, or the move is already at full range. An old break with no 38.2 ribbon pullback is stale. No trade.",
+        "Stale is not the same as extended: extended means price already reached 1 ATR (full range), not merely 61.8."
       ];
     }
     if (id === "extended") {
       return [
-        s.tag === "ex" ? "The last close is already at or through the 61.8 level. The move is extended. Too late to chase." : "Price is not yet at 61.8, so this is not the 'too late' case.",
-        "Extended is not stale. Stale is an old break that never set up a 38.2 pullback."
+        atFullRange(s) ? "The last close is already at or through 1 ATR (full range). Too late to chase the day-mode move." : "Price is not yet at full range (1 ATR). Mid-range 61.8 is the first target, not 'too late.'",
+        "Extended means full range (1 ATR). That is not the same as stale, and it is not the same as being at 61.8."
       ];
     }
     return [
       s.q3 === "Y"
-        ? "Golden Gate: it tagged 38.2, pulled back to the 8 EMA, and held, still beyond the trigger."
+        ? "Golden Gate is the 38.2 level. Once tagged, there is about a 60% chance of reaching 61.8. This one also has a ribbon pullback with trend — a typical entry."
         : s.tag === "nh"
-          ? "It tagged 38.2, but it did not hold the 8, still beyond the trigger. That is not a Golden Gate."
-          : "A Golden Gate needs all three: a 38.2 tag, a pullback to the 8, and a hold still past the trigger.",
-      "Target is 61.8. If it already reached 61.8, it is too late."
+          ? "It tagged the Golden Gate (38.2), but it did not hold the ribbon. That is not a usable GG entry."
+          : "The Golden Gate is 38.2. A typical entry is a pullback to the ribbon (8 / 21 / 34) with clear trend, targeting the 61.8 Golden FIB.",
+      "Official first target is 61.8 (Golden FIB). Full range is 1 ATR. Being at 61.8 is mid-range, not too late."
     ];
   }
 
@@ -1362,11 +1381,11 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       { y: lv.p786, name: "+78.6" },
       { y: lv.p618, name: "+61.8" },
       { y: lv.p50, name: "+50" },
-      { y: lv.p382, name: "+38.2" },
-      { y: lv.pTrig, name: "+Trig", fence: true },
+      { y: lv.p382, name: "+GG 38.2" },
+      { y: lv.pTrig, name: "+Call", fence: true },
       { y: lv.pdc, name: "PDC", solid: true },
-      { y: lv.mTrig, name: "−Trig", fence: true },
-      { y: lv.m382, name: "−38.2" },
+      { y: lv.mTrig, name: "−Put", fence: true },
+      { y: lv.m382, name: "−GG 38.2" },
       { y: lv.m50, name: "−50" },
       { y: lv.m618, name: "−61.8" },
       { y: lv.m786, name: "−78.6" },
@@ -1473,7 +1492,8 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       });
       if (ran && ran.dist != null && isFinite(ran.dist) && (lookWant(scenario) === "N" || ran.at618 || (ran.ago != null && ran.ago >= 2))) {
         var cue = (ran.dist >= 0 ? "+" : "") + fmtAtrPct(ran.dist) + " from trigger";
-        if (ran.at618) cue += " · already at 61.8";
+        if (atFullRange(scenario)) cue += " · already at 1 ATR (full range)";
+        else if (ran.at618) cue += " · mid-range 61.8 (first target, not too late)";
         parts.push('<text x="' + (padL + plotW - 4) + '" y="' + (padT + 14) + '" text-anchor="end" fill="#e3b341" font-size="12" font-weight="700" font-family="system-ui,sans-serif">' + esc(cue) + "</text>");
       }
     } else {
@@ -2083,20 +2103,20 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     var lv = s.levels;
     if (side === "L") {
       return [
-        { v: "382", l: "38.2", px: lv.p382, kind: "tr" },
-        { v: "618", l: "61.8", px: lv.p618, kind: "gg" },
-        { v: "next", l: "Next level (78.6)", px: lv.p786, kind: "bad" }
+        { v: "382", l: "38.2 — first scale / Golden Gate", px: lv.p382, kind: "scale" },
+        { v: "618", l: "61.8 — mid-range / Golden FIB (first official target)", px: lv.p618, kind: "tr" },
+        { v: "next", l: "1 ATR — full range (ideal / runners)", px: lv.p100, kind: "ideal" }
       ];
     }
     return [
-      { v: "382", l: "38.2", px: lv.m382, kind: "tr" },
-      { v: "618", l: "61.8", px: lv.m618, kind: "gg" },
-      { v: "next", l: "Next level (78.6)", px: lv.m786, kind: "bad" }
+      { v: "382", l: "38.2 — first scale / Golden Gate", px: lv.m382, kind: "scale" },
+      { v: "618", l: "61.8 — mid-range / Golden FIB (first official target)", px: lv.m618, kind: "tr" },
+      { v: "next", l: "1 ATR — full range (ideal / runners)", px: lv.m100, kind: "ideal" }
     ];
   }
 
   function l2CorrectStop(kind) { return kind === "gg" ? "ema" : "trig"; }
-  function l2CorrectTarget(kind) { return kind === "gg" ? "618" : "382"; }
+  function l2CorrectTarget(kind) { return "618"; }
 
   function l2Simulate(s, side, stopPx, tgtPx, from) {
     var start = from == null ? N_VIS : from;
@@ -2356,7 +2376,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       else if (side !== setup.action) l2Error("Took the wrong side (" + (side === "L" ? "long" : "short") + " vs " + (setup.action === "L" ? "long" : "short") + ")");
     }
     if (okSetup && !okStop) l2Error("Wrong stop on a " + (setup.kind === "gg" ? "Golden Gate" : "trigger"));
-    if (okSetup && !okTgt) l2Error("Wrong target on a " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ": picked " + (ses.target === "382" ? "38.2" : ses.target === "618" ? "61.8" : "the next level"));
+    if (okSetup && !okTgt) l2Error("Wrong target on a " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ": first official target is mid-range 61.8 (the Golden FIB). Picked " + (ses.target === "382" ? "38.2 (a first scale, not the official target)" : ses.target === "618" ? "61.8" : "1 ATR (the ideal runner — take 61.8 first)"));
     var praise = okSetup && (sim.r < 0)
       ? "Good process, even though this one didn't pay. That's a fair stop."
       : (!okSetup && sim.r > 0)
@@ -2471,7 +2491,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       html += "<h2>Level 2 — Trade it</h2>";
       html += "<p class=\"prompt\">Replay a real 15-minute tape, then take the trade or stand aside. Stops and targets follow Saty's rules. A good decision still counts if the outcome is a loser.</p>";
       if (!unlocked) html += '<p class="muted">Q1 is not yet at 80% over the last 20. You can still practice trades.</p>';
-      html += '<p class="muted">Stops fill when a 15-minute bar closes through them — the Saty rule — not on a wick. Earlier practice P&amp;L used wick fills; new trades use closes.</p>';
+      html += '<p class="muted">Stops fill when a 15-minute bar closes through them, not on a wick (our structured futures fill rule; Saty also uses ribbon and previous-close stops with a little room). First official target is mid-range 61.8 for both a trigger and a Golden Gate; 38.2 is a first scale, 1 ATR is the ideal runner. Earlier practice P&amp;L used wick fills and a 38.2 trigger target; new trades use closes and 61.8.</p>';
       html += '<p class="ran-cue">Practice P&amp;L: ' + esc(fmtR(L.rSum)) + " · " + esc(fmtUsd(L.rSum * L2_PLAN_R)) + " at $20/R (1 MNQ, $1.50 costs) · process " + l2ProcessPct(L) + "%</p>";
       html += '<button type="button" class="opt tone-long" id="l2-start">Start a session</button>';
       html += '<button type="button" class="opt tone-none" id="l2-back">Back to spotting</button>';
@@ -2550,7 +2570,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       }
       html += "</div>";
       if (ses.note) html += "<p>" + esc(ses.note) + "</p>";
-      html += "<p class=\"muted\">Taught answer: " + (setup.action === "N" ? "no trade" : (setup.action === "L" ? "long " : "short ") + (setup.kind === "gg" ? "Golden Gate (target 61.8, stop at the 8)" : "trigger (target 38.2, stop inside the trigger)")) + ".</p>";
+      html += "<p class=\"muted\">Taught answer: " + (setup.action === "N" ? "no trade" : (setup.action === "L" ? "long " : "short ") + (setup.kind === "gg" ? "Golden Gate (first official target 61.8, stop at the 8)" : "trigger (first official target 61.8, stop inside the trigger)")) + ".</p>";
       html += '<button type="button" class="opt tone-none" id="l2-continue">Continue</button>';
     }
     html += '<button type="button" class="learn-link" id="l2-back" style="margin-top:12px">Back to spotting</button>';
@@ -2567,11 +2587,15 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     var html = '<div class="learn">';
     html += "<h2>The checklist</h2>";
     html += "<ol class='rules'>";
-    html += "<li><strong>Ribbon.</strong> Green and fanned up, or red and fanned down. Twisted or flat means stay out.</li>";
+    html += "<li><strong>Ribbon.</strong> 8 / 21 / 34, green and fanned up or red and fanned down. Twisted or flat means stay out. Do not fade a fanned ribbon.</li>";
+    html += "<li><strong>The map (day mode).</strong> Previous day's close is the pivot. Call trigger +23.6, put trigger −23.6, Golden Gate 38.2, mid-range / Golden FIB 61.8, full range 1 ATR. First official target is 61.8; 1 ATR is the ideal. 38.2 is a first scale, not 'the' target.</li>";
     html += "<li><strong>What are you looking at?</strong> " + LOOK_RULE.join(" ") + "</li>";
-    html += "<li><strong>Fresh break</strong> is a Trigger only on the first 15-minute close through the trigger, with the ribbon agreeing, and not already at 61.8. Target 38.2.</li>";
-    html += "<li><strong>Pullback</strong> is a Golden Gate only if price tagged 38.2, pulled back to the 8 EMA, and held, still beyond the trigger. Target 61.8.</li>";
-    html += "<li><strong>Neither</strong> is no trade. Stale is an old break with no 38.2 pullback setup. Extended is already at 61.8 — too late, and not the same as stale.</li>";
+    html += "<li><strong>Fresh break</strong> is a Trigger on the first close through the call or put trigger, with the ribbon agreeing, and not already at 1 ATR. Target 61.8, then 1 ATR.</li>";
+    html += "<li><strong>Golden Gate</strong> is the 38.2 level. Once tagged, there is about a 60% chance of reaching 61.8. A typical entry is a pullback to the ribbon (8 / 21 / 34) with clear trend. Scale at 50 or 61.8; runners can go for 1 ATR. About 70% of the time, a hit on one ATR level reaches the next.</li>";
+    html += "<li><strong>Neither</strong> is no trade. Stale is an old break with no 38.2 / ribbon-pullback setup. Extended is already at <em>full range (1 ATR)</em> — too late to chase. Mid-range 61.8 is not 'too late.'</li>";
+    html += "<li><strong>Timeframe.</strong> Saty's default day-mode pairing is a 10-minute chart (3-minute for scalps). This drill uses 15-minute bars with the same day-mode ATR (prior-day close + daily ATR). Anything under 30 minutes is in his pairing range.</li>";
+    html += "<li><strong>Stops.</strong> He uses technical stops (trigger, previous close, or the ribbon) with a little room. In this futures drill, a structured stop fills on a 15-minute close through the level, not a wick. That is our fill rule, not a verbatim close-only law from his videos.</li>";
+    html += "<li><strong>Phase Oscillator.</strong> He uses it for stretch, compression, and phase — not as a replacement for the trigger map. Reconstructed formula: raw = ((close − EMA21) / (3 × ATR14)) × 100, then a 3-period EMA of raw. ±100 is extreme; ±61.8 are accumulation / distribution zones. We do not grade it on these short packed tapes.</li>";
     html += "</ol>";
     var pairFresh = null, pairPull = null;
     Object.keys(LOOK_PAIRS).forEach(function (id) {
@@ -2583,16 +2607,16 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     if (pairFresh && pairPull) {
       html += "<h3>Same day: fresh break, then pullback</h3>";
       html += '<div class="pair"><div><div class="pair-label">Fresh — first close in the last 2 bars</div>' + drawChart(pairFresh, N_VIS, "look", true) + "</div>";
-      html += '<div><div class="pair-label">Later — tagged 38.2, pulling back to the 8</div>' + drawChart(pairPull, N_VIS, "look", true) + "</div></div>";
+      html += '<div><div class="pair-label">Later — tagged Golden Gate 38.2, pulling back to the ribbon</div>' + drawChart(pairPull, N_VIS, "look", true) + "</div></div>";
     } else if (tr && gg) {
       html += "<h3>Fresh break vs pullback</h3>";
       html += '<div class="pair"><div><div class="pair-label">Trigger — first close</div>' + drawChart(tr, N_VIS, "look", true) + "</div>";
-      html += '<div><div class="pair-label">Golden Gate — 38.2, then the 8</div>' + drawChart(gg, N_VIS, "look", true) + "</div></div>";
+      html += '<div><div class="pair-label">Golden Gate — 38.2, then a ribbon pullback</div>' + drawChart(gg, N_VIS, "look", true) + "</div></div>";
     }
     if (st && ex) {
-      html += "<h3>Stale vs extended</h3>";
-      html += '<div class="pair"><div><div class="pair-label">Stale — old break, no setup</div>' + drawChart(st, N_VIS, "fence", true) + "</div>";
-      html += '<div><div class="pair-label">Extended — already at 61.8</div>' + drawChart(ex, N_VIS, "fence", true) + "</div></div>";
+      html += "<h3>Stale vs full range</h3>";
+      html += '<div class="pair"><div class="pair-label">Stale — old break, no setup</div>' + drawChart(st, N_VIS, "fence", true) + "</div>";
+      html += '<div><div class="pair-label">Extended — already at 1 ATR (full range)</div>' + drawChart(ex, N_VIS, "fence", true) + "</div></div>";
     }
     html += '<button type="button" class="opt tone-none" id="learn-back">Back to practice</button>';
     html += "</div>";
@@ -2665,7 +2689,8 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
         if (info.ago == null) ranBits.push("First close: not in this window");
         else ranBits.push("First close: " + info.ago + " bar" + (info.ago === 1 ? "" : "s") + " ago");
         if (info.dist != null && isFinite(info.dist)) ranBits.push("Now " + fmtAtrPct(info.dist) + " from the trigger");
-        if (info.at618) ranBits.push("already at 61.8");
+        if (atFullRange(s)) ranBits.push("already at 1 ATR (full range)");
+        else if (info.at618) ranBits.push("mid-range 61.8 — first target, not too late");
         body += '<div class="ran-cue">' + esc(ranBits.join(" · ")) + "</div>";
         var partner = LOOK_PAIRS[s.id] ? byId(ALL, LOOK_PAIRS[s.id]) : null;
         if (partner) {
@@ -2692,7 +2717,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
         body += '<div class="chk ' + (chk.pulled ? "yes" : "no") + '">' + (chk.pulled ? "✓" : "✗") + " Pulled back to the 8 EMA</div>";
         body += '<div class="chk ' + (chk.held ? "yes" : "no") + '">' + (chk.held ? "✓" : "✗") + " Held, still beyond the trigger</div>";
         body += "</div>";
-        if (chk.yes) body += "<p>All three are in place. That is a Golden Gate. Target is 61.8.</p>";
+        if (chk.yes) body += "<p>Golden Gate (38.2) is tagged, with a ribbon pullback that held. About a 60% chance of reaching 61.8 (the Golden FIB). First official target is 61.8; 1 ATR is the ideal runner.</p>";
         else body += "<p>" + esc(lessonLines(s, "gg").join(" ")) + "</p>";
       } else {
         lines.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
