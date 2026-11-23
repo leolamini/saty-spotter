@@ -142,7 +142,49 @@ body {
 }
 .look-rule p { margin: 0 0 8px; font-size: 14px; line-height: 1.45; color: var(--text); }
 .look-rule p:last-child { margin-bottom: 0; }
-  </style>
+  
+#btn-trade {
+  font-size: 12px;
+  padding: 6px 4px;
+  opacity: 0.92;
+}
+.ran-cue {
+  background: #211e14;
+  border: 1px solid #3d3419;
+  color: #e3b341;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.gg-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.chk {
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.chk.yes {
+  background: rgba(63,185,80,0.15);
+  color: #3fb950;
+  border: 1px solid rgba(63,185,80,0.35);
+}
+.chk.no {
+  background: rgba(248,81,73,0.12);
+  color: #f85149;
+  border: 1px solid rgba(248,81,73,0.3);
+}
+.l2-strip { font-size: 13px; }
+.stage h2 { font-size: 20px; margin: 0 0 10px; }
+
+</style>
 </head>
 <body>
   <div id="app"></div>
@@ -352,6 +394,14 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
   var MASTER_MIN = 20;
   var MASTER_N = 20;
   var MASTER_ACC = 0.90;
+  var BASIC_MASTER_MIN = 10;
+  var BASIC_MASTER_ACC = 1;
+  var N_FWD = 12;
+  var L2_COST = 1.5;
+  var L2_POINT = 2;
+  var L2_PLAN_R = 20;
+  var L2_LOSS_STOP = 2;
+  var L2_PLAY_MS = 280;
   var STORAGE_KEY = "saty-spotter-web-v1";
   var PACK_SHA = "f444d31b496c09d3d672fdac1740124194b1a979e7c06804e33ad17b997e9854";
   var ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -792,8 +842,42 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     return { br: br, tag: tag, pull: pull, now: N_VIS - 1 };
   }
 
+  function lookRanInfo(s) {
+    var marks = lookMarks(s);
+    var side = ribbonSide(s);
+    var last = s.bars[N_VIS - 1];
+    var lv = s.levels;
+    var trig, dist, at618;
+    if (side === "short") {
+      trig = lv.mTrig;
+      dist = (trig - last.c) / s.atr;
+      at618 = last.c <= lv.m618;
+    } else {
+      trig = lv.pTrig;
+      dist = (last.c - trig) / s.atr;
+      at618 = last.c >= lv.p618;
+      if (!side && last.c < lv.mTrig) {
+        trig = lv.mTrig;
+        dist = (trig - last.c) / s.atr;
+        at618 = last.c <= lv.m618;
+      }
+    }
+    var ago = marks.br == null ? null : (N_VIS - 1 - marks.br);
+    return { ago: ago, dist: dist, at618: at618, marks: marks, side: side };
+  }
+
+  function fmtAtrPct(x) {
+    if (x == null || !isFinite(x)) return "—";
+    var n = Math.round(x * 100);
+    return n + "% ATR";
+  }
+
   function lookWhy(s) {
     var look = lookWant(s);
+    var info = lookRanInfo(s);
+    var ran = info.ago == null
+      ? "The first close past the trigger is not in this window — the move already ran earlier."
+      : "The first close past the trigger was " + info.ago + " bar" + (info.ago === 1 ? "" : "s") + " ago, and price is now " + fmtAtrPct(info.dist) + " beyond the trigger.";
     if (look === "B") {
       return "The first close beyond the trigger was in the last " + FRESH_BARS + " bars, and price has not pulled back yet. That's a fresh break.";
     }
@@ -801,12 +885,49 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       return "It already broke and tagged 38.2 earlier. Now it is pulling back toward the 8 EMA or the trigger. That's a pullback.";
     }
     if (s.tag === "ex") {
-      return "Price already ran to 61.8. The first close was not in the last " + FRESH_BARS + " bars, so this is not a fresh break. That's neither — too late.";
+      return ran + " Price already ran to 61.8. That's neither — too late, not a fresh break.";
     }
     if (s.tag === "st") {
-      return "The first close already happened earlier, and there is no pullback to the 8 after a 38.2 tag. That's neither (a stale break).";
+      return ran + " There is no pullback to the 8 after a 38.2 tag. That's neither (a stale break).";
     }
-    return "There is no first close beyond the trigger in the last " + FRESH_BARS + " bars, and this is not a 38.2 pullback. That's neither.";
+    return ran + " This is not a 38.2 pullback. That's neither.";
+  }
+
+  function barsSinceTruth(s) {
+    var ago = lookRanInfo(s).ago;
+    if (ago == null) return "none";
+    if (ago <= 1) return "01";
+    if (ago <= 5) return "25";
+    return "6p";
+  }
+
+  var BARS_OPTS = [
+    { v: "01", l: "0 or 1 — still a fresh close" },
+    { v: "25", l: "2 to 5 bars ago" },
+    { v: "6p", l: "6 or more bars ago" },
+    { v: "none", l: "Not in this window (already ran)" }
+  ];
+
+  function ggChecks(s) {
+    var marks = lookMarks(s);
+    var side = ribbonSide(s);
+    var last = s.bars[N_VIS - 1];
+    var lv = s.levels;
+    var trig = side === "short" ? lv.mTrig : lv.pTrig;
+    var tagged = marks.tag != null;
+    var pulled = marks.pull != null;
+    if (!pulled && tagged) {
+      var b = last;
+      if (side === "long" && b.l <= b.e8 + 0.25) pulled = true;
+      if (side === "short" && b.h >= b.e8 - 0.25) pulled = true;
+    }
+    var held = side === "short"
+      ? (last.c <= trig && last.c <= last.e8 + 0.25)
+      : (last.c >= trig && last.c >= last.e8 - 0.25);
+    var yes = s.q3 === "Y";
+    /* A labeled YES is shown with all three checks ticked — that is the taught truth. */
+    if (yes) return { tagged: true, pulled: true, held: true, yes: true };
+    return { tagged: tagged, pulled: pulled, held: held, yes: false };
   }
 
   function lessonLines(s, id) {
@@ -869,10 +990,19 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     return { n: recent.length, acc: acc(ok, recent.length), ok: ok };
   }
 
+  function isBasicSkill(id) {
+    return id === "ribbon" || id === "fence" || id === "side";
+  }
+
   function skillMeter(logs, id, bit) {
     /* Recomputed from logs every time, so new thresholds apply to existing saves. */
     var xs = logs.filter(function (l) { return skillOfLog(l) === id; });
     if (!xs.length) return "new";
+    /* Basics at 10/10 (or 10 straight) are mastered. Do not hold them at learning for want of 20 attempts. */
+    if (isBasicSkill(id) && xs.length >= BASIC_MASTER_MIN) {
+      var b = recentAcc(xs, BASIC_MASTER_MIN);
+      if (b.n >= BASIC_MASTER_MIN && b.acc >= BASIC_MASTER_ACC) return "mastered";
+    }
     if (xs.length >= MASTER_MIN) {
       var m = recentAcc(xs, MASTER_N);
       if (m.n >= MASTER_MIN && m.acc >= MASTER_ACC) return "mastered";
@@ -927,8 +1057,39 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       bestStreak: 0,
       points: 0,
       skills: {},
+      session: null,
+      l2: emptyL2()
+    };
+  }
+
+  function emptyL2() {
+    return {
+      trades: [],
+      rSum: 0,
+      dollars: 0,
+      processOk: 0,
+      processN: 0,
+      sessions: 0,
+      stoppedSessions: 0,
+      errors: [],
       session: null
     };
+  }
+
+  function migrateL2(raw) {
+    var d = emptyL2();
+    if (!raw || typeof raw !== "object") return d;
+    d.trades = Array.isArray(raw.trades) ? raw.trades : [];
+    d.rSum = Number(raw.rSum) || 0;
+    d.dollars = Number(raw.dollars) || 0;
+    d.processOk = Number(raw.processOk) || 0;
+    d.processN = Number(raw.processN) || 0;
+    d.sessions = Number(raw.sessions) || 0;
+    d.stoppedSessions = Number(raw.stoppedSessions) || 0;
+    d.errors = Array.isArray(raw.errors) ? raw.errors : [];
+    d.session = raw.session && typeof raw.session === "object" ? raw.session : null;
+    d.resume = !!raw.resume;
+    return d;
   }
 
   function rebuildSpacing(s) {
@@ -969,7 +1130,8 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
         bestStreak: Number(p.bestStreak) || 0,
         points: Number(p.points) || 0,
         skills: p.skills && typeof p.skills === "object" ? p.skills : {},
-        session: p.session && typeof p.session === "object" ? p.session : null
+        session: p.session && typeof p.session === "object" ? p.session : null,
+        l2: migrateL2(p.l2)
       });
     } catch (e) {
       return emptySave();
@@ -1188,7 +1350,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  function drawChart(scenario, shown, highlight, compact) {
+  function drawChart(scenario, shown, highlight, compact, trade) {
     var W = 800, H = compact ? 230 : 520;
     var padL = 58, padR = 86, padT = 18, padB = 32;
     var plotW = W - padL - padR, plotH = H - padT - padB;
@@ -1217,6 +1379,11 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     if (near.length) {
       lo = Math.min(lo, Math.min.apply(null, near.map(function (L) { return L.y; })));
       hi = Math.max(hi, Math.max.apply(null, near.map(function (L) { return L.y; })));
+    }
+    if (trade) {
+      [trade.entry, trade.exit, trade.stopPx, trade.tgtPx].forEach(function (p) {
+        if (p != null && isFinite(p)) { lo = Math.min(lo, p); hi = Math.max(hi, p); }
+      });
     }
     if (hi <= lo) hi = lo + 1;
     function yAt(p) { return padT + ((hi - p) / (hi - lo)) * plotH; }
@@ -1294,7 +1461,8 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
         caps[idx] = (caps[idx] || []);
         if (caps[idx].indexOf(name) < 0) caps[idx].push(name);
       }
-      addCap(marks.br, "Break");
+      var ran = lookRanInfo(scenario);
+      addCap(marks.br, ran.ago != null && ran.ago >= 2 ? ("Break · " + ran.ago + " ago") : "Break");
       addCap(marks.tag, "38.2");
       addCap(marks.pull, "8 EMA");
       addCap(marks.now, "Now");
@@ -1302,8 +1470,24 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
         var i = Number(k);
         parts.push('<text x="' + xAt(i) + '" y="' + (padT + plotH + 20) + '" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700" font-family="system-ui,sans-serif">' + esc(caps[k].join(" · ")) + "</text>");
       });
+      if (ran && ran.dist != null && isFinite(ran.dist) && (lookWant(scenario) === "N" || ran.at618 || (ran.ago != null && ran.ago >= 2))) {
+        var cue = (ran.dist >= 0 ? "+" : "") + fmtAtrPct(ran.dist) + " from trigger";
+        if (ran.at618) cue += " · already at 61.8";
+        parts.push('<text x="' + (padL + plotW - 4) + '" y="' + (padT + 14) + '" text-anchor="end" fill="#e3b341" font-size="12" font-weight="700" font-family="system-ui,sans-serif">' + esc(cue) + "</text>");
+      }
     } else {
       parts.push('<text x="' + (decX - 4) + '" y="' + (padT + plotH + 20) + '" text-anchor="end" fill="#8b949e" font-size="11" font-family="system-ui,sans-serif">Decision</text>');
+    }
+    if (trade && trade.entry != null) {
+      function mark(y, color, label) {
+        if (y == null || !isFinite(y)) return;
+        parts.push('<line x1="' + padL + '" x2="' + (padL + plotW) + '" y1="' + yAt(y) + '" y2="' + yAt(y) + '" stroke="' + color + '" stroke-width="1.6" stroke-dasharray="4 3"/>');
+        parts.push('<text x="' + (padL + 4) + '" y="' + (yAt(y) - 4) + '" fill="' + color + '" font-size="11" font-weight="700" font-family="system-ui,sans-serif">' + esc(label) + "</text>");
+      }
+      mark(trade.entry, "#79c0ff", "Entry");
+      mark(trade.stopPx, "#f85149", "Stop");
+      mark(trade.tgtPx, "#3fb950", "Target");
+      if (trade.exit != null) mark(trade.exit, "#e3b341", "Exit");
     }
     parts.push("</svg>");
     return parts.join("");
@@ -1322,6 +1506,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     timeout: false,
     skillOnly: false,
     contrast: false,
+    quiz: null, /* null | bars | bars-ok | bars-bad */
     shareNote: "",
     ids: [],
     index: 0,
@@ -1392,7 +1577,8 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
       lessonSkill: ui.lessonSkill,
       timeout: ui.timeout === true,
       skillOnly: ui.skillOnly === true,
-      contrast: ui.contrast === true
+      contrast: ui.contrast === true,
+      quiz: ui.quiz || null
     };
     writeSave(save);
   }
@@ -1411,6 +1597,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     ui.timeout = ses.timeout === true;
     ui.skillOnly = ses.skillOnly === true;
     ui.contrast = ses.contrast === true;
+    ui.quiz = ses.quiz || null;
     ui.ids = ids;
     ui.index = Math.max(0, Math.min(ses.index || 0, ids.length - 1));
     ui.qIndex = Math.max(0, ses.qIndex || 0);
@@ -1492,6 +1679,7 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     ui.skillOnly = !focus && !!opts.skillOnly;
     ui.contrast = !!opts.contrast || (!!focus && ui.skill === "fresh-pull");
     ui.timeout = false;
+    ui.quiz = null;
     var exclude = [];
     if (seed) exclude.push(seed.id);
     var n = focus ? 5 : 1;
@@ -1524,6 +1712,11 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
 
   function begin() {
     requestPersist();
+    if (save.l2 && save.l2.resume && save.l2.session && Array.isArray(save.l2.session.ids) && save.l2.session.ids.length) {
+      ui.view = "trade";
+      if (save.l2.session.phase === "replay") l2PlayBars();
+      return;
+    }
     if (restoreSession()) return;
     var choice = chooseSkill(save);
     startPlay(false, choice.skill, null, { hard: choice.hard, speed: choice.speed, skillOnly: choice.skillOnly, contrast: choice.contrast });
@@ -1753,6 +1946,23 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     } else {
       lines.push("Most common misses: none yet");
     }
+    var L = l2State();
+    lines.push("");
+    lines.push("Level 2 (Trade it)");
+    if (!(L.trades && L.trades.length) && !L.sessions) {
+      lines.push("No trade-it sessions yet.");
+    } else {
+      lines.push("Practice P&L: " + fmtR(L.rSum) + "  ·  " + fmtUsd(L.rSum * L2_PLAN_R) + " at $20/R (1 MNQ, $1.50 costs)");
+      lines.push("Process grade: " + l2ProcessPct(L) + "%" + (L.processN ? " (" + L.processOk + "/" + L.processN + " checks)" : ""));
+      lines.push("Sessions: " + (L.sessions || 0) + "  ·  stopped at 2 losses: " + (L.stoppedSessions || 0));
+      var errs = l2ErrorSummary(L);
+      if (errs.length) {
+        lines.push("Common decision errors");
+        errs.forEach(function (e) { lines.push("• " + e.k + " (" + e.n + ")"); });
+      } else {
+        lines.push("Common decision errors: none yet");
+      }
+    }
     return lines.join("\n");
   }
 
@@ -1819,6 +2029,519 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     }).join("");
   }
 
+  /* ---------- Level 2: Trade it ---------- */
+  var l2Timer = null;
+  function clearL2Timer() {
+    if (l2Timer) { clearInterval(l2Timer); l2Timer = null; }
+  }
+
+  function l2State() {
+    if (!save.l2) save.l2 = emptyL2();
+    return save.l2;
+  }
+
+  function q1Unlocked(sv) {
+    var a = lastSkillAcc(sv || save, "fresh-pull", 20);
+    return a.n >= 20 && a.acc >= 0.8;
+  }
+
+  function l2SetupOf(s) {
+    /* Truth at the packed decision bar — taught labels, no lookahead past it. */
+    if (s.q3 === "Y" || s.tag === "gg") {
+      return { action: s.q1 === "R" ? "S" : "L", kind: "gg" };
+    }
+    if (s.q2 === "F" && (s.code === "LT" || s.code === "ST" || s.tag === "tr")) {
+      return { action: s.q1 === "R" ? "S" : "L", kind: "tr" };
+    }
+    return { action: "N", kind: s.tag || "none" };
+  }
+
+  function l2StopLevels(s, side) {
+    var lv = s.levels;
+    var last = s.bars[N_VIS - 1];
+    if (side === "L") {
+      return [
+        { v: "trig", l: "A close back inside the trigger", px: lv.pTrig, kind: "tr" },
+        { v: "ema", l: "A close back beyond the 8 EMA", px: last.e8, kind: "gg" },
+        { v: "bad", l: "The far side of 61.8", px: lv.m618, kind: "bad" }
+      ];
+    }
+    return [
+      { v: "trig", l: "A close back inside the trigger", px: lv.mTrig, kind: "tr" },
+      { v: "ema", l: "A close back beyond the 8 EMA", px: last.e8, kind: "gg" },
+      { v: "bad", l: "The far side of 61.8", px: lv.p618, kind: "bad" }
+    ];
+  }
+
+  function l2TargetLevels(s, side) {
+    var lv = s.levels;
+    if (side === "L") {
+      return [
+        { v: "382", l: "38.2", px: lv.p382, kind: "tr" },
+        { v: "618", l: "61.8", px: lv.p618, kind: "gg" },
+        { v: "next", l: "Next level (78.6)", px: lv.p786, kind: "bad" }
+      ];
+    }
+    return [
+      { v: "382", l: "38.2", px: lv.m382, kind: "tr" },
+      { v: "618", l: "61.8", px: lv.m618, kind: "gg" },
+      { v: "next", l: "Next level (78.6)", px: lv.m786, kind: "bad" }
+    ];
+  }
+
+  function l2CorrectStop(kind) { return kind === "gg" ? "ema" : "trig"; }
+  function l2CorrectTarget(kind) { return kind === "gg" ? "618" : "382"; }
+
+  function l2Simulate(s, side, stopPx, tgtPx, from) {
+    var start = from == null ? N_VIS : from;
+    var entry = s.bars[Math.max(0, start - 1)].c;
+    var dir = side === "L" ? 1 : -1;
+    var exitPx = null, reason = "time", hitBar = s.bars.length - 1;
+    var i, b, hitStop, hitTgt;
+    for (i = start; i < s.bars.length; i++) {
+      b = s.bars[i];
+      hitStop = dir > 0 ? b.l <= stopPx : b.h >= stopPx;
+      hitTgt = dir > 0 ? b.h >= tgtPx : b.l <= tgtPx;
+      if (hitStop && hitTgt) { exitPx = stopPx; reason = "stop"; hitBar = i; break; }
+      if (hitStop) { exitPx = stopPx; reason = "stop"; hitBar = i; break; }
+      if (hitTgt) { exitPx = tgtPx; reason = "target"; hitBar = i; break; }
+    }
+    if (exitPx == null) {
+      exitPx = s.bars[s.bars.length - 1].c;
+      reason = "time";
+      hitBar = s.bars.length - 1;
+    }
+    var riskPts = Math.max(1, Math.abs(entry - stopPx));
+    var grossPts = dir * (exitPx - entry);
+    var riskUsd = riskPts * L2_POINT;
+    var grossUsd = grossPts * L2_POINT;
+    var netUsd = grossUsd - L2_COST;
+    var r = riskUsd ? netUsd / riskUsd : 0;
+    return {
+      entry: entry, exit: exitPx, reason: reason, hitBar: hitBar,
+      riskPts: riskPts, grossPts: grossPts, r: r, dollars: netUsd,
+      planDollars: r * L2_PLAN_R
+    };
+  }
+
+  function l2PickQueue() {
+    var taken = {};
+    (save.l2.trades || []).slice(-40).forEach(function (t) { if (t.id) taken[t.id] = true; });
+    var trades = [], skips = [];
+    ALL.forEach(function (s) {
+      if (taken[s.id]) return;
+      var setup = l2SetupOf(s);
+      if (setup.action === "N") skips.push(s);
+      else trades.push(s);
+    });
+    function take(xs, n) {
+      var copy = sortCandidates(xs, false);
+      return copy.slice(0, n);
+    }
+    var out = take(trades, 6).concat(take(skips, 4));
+    if (out.length < 8) {
+      var rest = sortCandidates(ALL.filter(function (s) { return !taken[s.id]; }), false);
+      out = out.concat(rest);
+    }
+    /* shuffle mix but keep deterministic-ish by tmin after pairing */
+    out.sort(function (a, b) { return ((a.tmin + 13) * 7 % 97) - ((b.tmin + 13) * 7 % 97); });
+    return out.slice(0, 10).map(function (s) { return s.id; });
+  }
+
+  function l2Current() {
+    var ses = l2State().session;
+    if (!ses || !ses.ids) return null;
+    return byId(ALL, ses.ids[ses.index]) || null;
+  }
+
+  function l2Snap() {
+    l2State().resume = ui.view === "trade";
+    writeSave(save);
+  }
+
+  function l2StartSession(force) {
+    clearL2Timer();
+    var L = l2State();
+    if (!force && L.session && L.session.phase && L.session.phase !== "session-end" && L.session.ids && L.session.ids.length) {
+      ui.view = "trade";
+      if (L.session.phase === "replay") l2PlayBars();
+      return;
+    }
+    L.session = {
+      ids: l2PickQueue(),
+      index: 0,
+      shown: 16,
+      phase: "replay",
+      pick: null,
+      stop: null,
+      target: null,
+      entryEnd: null,
+      losses: 0,
+      trades: [],
+      note: "",
+      outcome: null
+    };
+    L.sessions += 1;
+    ui.view = "trade";
+    l2Snap();
+    l2PlayBars();
+  }
+
+  function l2PlayBars() {
+    clearL2Timer();
+    var ses = l2State().session;
+    if (!ses) return;
+    ses.phase = "replay";
+    if (!ses.shown || ses.shown < 16) ses.shown = 16;
+    l2Snap();
+    l2Timer = setInterval(function () {
+      var cur = l2State().session;
+      if (!cur || cur.phase !== "replay") { clearL2Timer(); return; }
+      if (cur.shown >= N_VIS) {
+        clearL2Timer();
+        cur.phase = "decide";
+        cur.shown = N_VIS;
+        l2Snap();
+        render();
+        return;
+      }
+      cur.shown += 1;
+      l2Snap();
+      render();
+    }, L2_PLAY_MS);
+  }
+
+  function l2JumpToDecide() {
+    clearL2Timer();
+    var ses = l2State().session;
+    if (!ses) return;
+    ses.shown = N_VIS;
+    ses.phase = "decide";
+    l2Snap();
+    render();
+  }
+
+  function l2NextBar() {
+    clearL2Timer();
+    var ses = l2State().session;
+    if (!ses) return;
+    if (ses.shown >= N_VIS) {
+      ses.phase = "decide";
+    } else {
+      ses.shown += 1;
+      if (ses.shown >= N_VIS) ses.phase = "decide";
+      else ses.phase = "replay";
+    }
+    l2Snap();
+    render();
+  }
+
+  function l2Decide(pick) {
+    var ses = l2State().session;
+    var s = l2Current();
+    if (!ses || !s || ses.phase !== "decide") return;
+    ses.pick = pick;
+    ses.entryEnd = ses.shown;
+    var setup = l2SetupOf(s);
+    if (pick === "W" || pick === "N") {
+      l2FinishPass(s, ses, setup, pick);
+      return;
+    }
+    ses.phase = "stop";
+    l2Snap();
+    render();
+  }
+
+  function l2ChooseStop(v) {
+    var ses = l2State().session;
+    if (!ses || ses.phase !== "stop") return;
+    ses.stop = v;
+    ses.phase = "target";
+    l2Snap();
+    render();
+  }
+
+  function l2ChooseTarget(v) {
+    var ses = l2State().session;
+    var s = l2Current();
+    if (!ses || !s || ses.phase !== "target") return;
+    ses.target = v;
+    l2FinishTake(s, ses);
+  }
+
+  function l2GradeSetup(setup, pick) {
+    if (setup.action === "N") return pick === "N" || pick === "W";
+    if (pick === "L" || pick === "S") return pick === setup.action;
+    return false;
+  }
+
+  function l2FinishPass(s, ses, setup, pick) {
+    var okSetup = l2GradeSetup(setup, pick);
+    var process = { setup: okSetup, stop: true, target: true };
+    var gradeN = 1;
+    var gradeOk = okSetup ? 1 : 0;
+    var rec = {
+      id: s.id,
+      pick: pick,
+      kind: setup.kind,
+      want: setup.action,
+      okSetup: okSetup,
+      r: 0,
+      dollars: 0,
+      planDollars: 0,
+      reason: pick === "W" ? "wait" : "no-trade",
+      process: process
+    };
+    l2Commit(ses, rec, gradeOk, gradeN);
+    if (!okSetup) {
+      if (setup.action !== "N" && (pick === "N" || pick === "W")) l2Error("Passed on a " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + " (" + (setup.action === "L" ? "long" : "short") + ")");
+    }
+    ses.phase = "outcome";
+    ses.outcome = rec;
+    ses.note = okSetup
+      ? (setup.action === "N" ? "Right to stand aside. Patience is part of the system." : "You passed. That setup was a trade.")
+      : (setup.action === "N" ? "There was no trade here." : "That was a real " + (setup.action === "L" ? "long" : "short") + " " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ". Passing missed it.");
+    l2Snap();
+    render();
+  }
+
+  function l2FinishTake(s, ses) {
+    var setup = l2SetupOf(s);
+    var side = ses.pick;
+    var stopWant = l2CorrectStop(setup.kind);
+    var tgtWant = l2CorrectTarget(setup.kind);
+    var okSetup = l2GradeSetup(setup, side);
+    var okStop = setup.action !== "N" && ses.stop === stopWant;
+    var okTgt = setup.action !== "N" && ses.target === tgtWant;
+    if (setup.action === "N") { okStop = false; okTgt = false; }
+    var stops = l2StopLevels(s, side);
+    var tgts = l2TargetLevels(s, side);
+    var stop = stops.filter(function (o) { return o.v === ses.stop; })[0] || stops[0];
+    var tgt = tgts.filter(function (o) { return o.v === ses.target; })[0] || tgts[0];
+    var sim = l2Simulate(s, side, stop.px, tgt.px, N_VIS);
+    var process = { setup: okSetup, stop: okStop, target: okTgt };
+    var gradeN = 3;
+    var gradeOk = (okSetup ? 1 : 0) + (okStop ? 1 : 0) + (okTgt ? 1 : 0);
+    var rec = {
+      id: s.id,
+      pick: side,
+      kind: setup.kind,
+      want: setup.action,
+      okSetup: okSetup,
+      okStop: okStop,
+      okTarget: okTgt,
+      stop: ses.stop,
+      target: ses.target,
+      r: sim.r,
+      dollars: sim.dollars,
+      planDollars: sim.planDollars,
+      reason: sim.reason,
+      entry: sim.entry,
+      exit: sim.exit,
+      stopPx: stop.px,
+      tgtPx: tgt.px,
+      hitBar: sim.hitBar,
+      process: process
+    };
+    l2Commit(ses, rec, gradeOk, gradeN);
+    if (!okSetup) {
+      if (setup.action === "N") l2Error("Took a " + (side === "L" ? "long" : "short") + " when it was no trade");
+      else if (side !== setup.action) l2Error("Took the wrong side (" + (side === "L" ? "long" : "short") + " vs " + (setup.action === "L" ? "long" : "short") + ")");
+    }
+    if (okSetup && !okStop) l2Error("Wrong stop on a " + (setup.kind === "gg" ? "Golden Gate" : "trigger"));
+    if (okSetup && !okTgt) l2Error("Wrong target on a " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ": picked " + (ses.target === "382" ? "38.2" : ses.target === "618" ? "61.8" : "the next level"));
+    var praise = okSetup && (sim.r < 0)
+      ? "Good process, even though this one didn't pay. That's a fair stop."
+      : (!okSetup && sim.r > 0)
+        ? "This one made money, but the process was off. Grade the decision, not the luck."
+        : (okSetup && okStop && okTgt)
+          ? "Setup, stop, and target all match the rules."
+          : "";
+    ses.phase = "outcome";
+    ses.outcome = rec;
+    ses.note = praise;
+    l2Snap();
+    render();
+  }
+
+  function l2Commit(ses, rec, gradeOk, gradeN) {
+    var L = l2State();
+    L.trades = (L.trades || []).concat([rec]);
+    ses.trades = (ses.trades || []).concat([rec]);
+    L.rSum += rec.r || 0;
+    L.dollars += rec.dollars || 0;
+    L.processOk += gradeOk;
+    L.processN += gradeN;
+    if (rec.pick === "L" || rec.pick === "S") {
+      if (rec.r < 0) ses.losses += 1;
+    }
+  }
+
+  function l2Error(msg) {
+    var L = l2State();
+    L.errors = (L.errors || []).concat([msg]);
+    if (L.errors.length > 200) L.errors = L.errors.slice(-200);
+  }
+
+  function l2AfterOutcome() {
+    var ses = l2State().session;
+    if (!ses) return;
+    if (ses.losses >= L2_LOSS_STOP) {
+      ses.phase = "session-end";
+      l2State().stoppedSessions += 1;
+      l2Snap();
+      render();
+      return;
+    }
+    if (ses.index + 1 >= ses.ids.length) {
+      ses.phase = "session-end";
+      l2Snap();
+      render();
+      return;
+    }
+    ses.index += 1;
+    ses.shown = 16;
+    ses.phase = "replay";
+    ses.pick = null;
+    ses.stop = null;
+    ses.target = null;
+    ses.entryEnd = null;
+    ses.outcome = null;
+    ses.note = "";
+    l2Snap();
+    l2PlayBars();
+    render();
+  }
+
+  function l2Leave() {
+    clearL2Timer();
+    l2State().resume = false;
+    ui.view = "play";
+    snapshot();
+    render();
+  }
+
+  function l2ProcessPct(L) {
+    return L.processN ? Math.round((100 * L.processOk) / L.processN) : 0;
+  }
+
+  function l2ErrorSummary(L) {
+    var counts = {};
+    (L.errors || []).forEach(function (e) { counts[e] = (counts[e] || 0) + 1; });
+    return Object.keys(counts).map(function (k) { return { k: k, n: counts[k] }; })
+      .sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
+  }
+
+  function fmtR(r) {
+    if (r == null || !isFinite(r)) return "—";
+    var sign = r > 0 ? "+" : "";
+    return sign + r.toFixed(2) + "R";
+  }
+
+  function fmtUsd(n) {
+    if (n == null || !isFinite(n)) return "—";
+    var sign = n > 0 ? "+" : n < 0 ? "−" : "";
+    return sign + "$" + Math.abs(n).toFixed(2);
+  }
+
+
+  function renderTrade() {
+    var L = l2State();
+    var ses = L.session;
+    var html = "";
+    var unlocked = q1Unlocked(save);
+    if (!ses) {
+      html += '<div class="stage">';
+      html += "<h2>Level 2 — Trade it</h2>";
+      html += "<p class=\"prompt\">Replay a real 15-minute tape, then take the trade or stand aside. Stops and targets follow Saty's rules. A good decision still counts if the outcome is a loser.</p>";
+      if (!unlocked) html += '<p class="muted">Q1 is not yet at 80% over the last 20. You can still practice trades.</p>';
+      html += '<p class="ran-cue">Practice P&amp;L: ' + esc(fmtR(L.rSum)) + " · " + esc(fmtUsd(L.rSum * L2_PLAN_R)) + " at $20/R (1 MNQ, $1.50 costs) · process " + l2ProcessPct(L) + "%</p>";
+      html += '<button type="button" class="opt tone-long" id="l2-start">Start a session</button>';
+      html += '<button type="button" class="opt tone-none" id="l2-back">Back to spotting</button>';
+      html += "</div>";
+      return html;
+    }
+    var sessR = (ses.trades || []).reduce(function (a, t) { return a + (t.r || 0); }, 0);
+    html += '<div class="strip l2-strip">Session ' + esc(fmtR(sessR)) + (ses.losses ? " · " + ses.losses + " loss" + (ses.losses === 1 ? "" : "es") : "") + " · stop after 2 losses · " + esc(fmtR(L.rSum)) + " all sessions</div>";
+
+    if (ses.phase === "session-end") {
+      html += '<div class="stage">';
+      html += "<h2>" + (ses.losses >= L2_LOSS_STOP ? "Session stop — 2 losses, per your plan." : "Session complete.") + "</h2>";
+      html += "<p>This session: " + esc(fmtR(sessR)) + " · " + esc(fmtUsd(sessR * L2_PLAN_R)) + " at $20/R.</p>";
+      html += "<p>All practice: " + esc(fmtR(L.rSum)) + " · process grade " + l2ProcessPct(L) + "%.</p>";
+      html += '<button type="button" class="opt tone-long" id="l2-start">New session</button>';
+      html += '<button type="button" class="opt tone-none" id="l2-back">Back to spotting</button>';
+      html += "</div>";
+      return html;
+    }
+
+    var s = l2Current();
+    if (!s) {
+      html += '<div class="stage"><p>No chart.</p><button type="button" class="opt tone-none" id="l2-back">Back</button></div>';
+      return html;
+    }
+    var shown = Math.max(1, Math.min(ses.shown || 16, s.bars.length));
+    var overlay = null;
+    if (ses.phase === "outcome" && ses.outcome && (ses.outcome.pick === "L" || ses.outcome.pick === "S")) {
+      overlay = ses.outcome;
+      shown = Math.max(shown, (ses.outcome.hitBar || N_VIS) + 1);
+    }
+    var hl = ses.phase === "outcome" ? "fence" : "fence";
+    html += '<div class="stage">';
+    html += '<div class="chart">' + drawChart(s, shown, hl, false, overlay) + '<div class="caption">' + esc(s.name) + " · " + esc(s.when) + " · " + shown + " bars shown · $1.50 round-trip in the sim</div></div>";
+
+    if (ses.phase === "replay") {
+      html += '<p class="prompt">Watch the tape. No future bars are shown.</p>';
+      html += '<button type="button" class="opt tone-none" id="l2-next">Next bar</button>';
+      html += '<button type="button" class="opt tone-none" id="l2-skip">Skip to the decision</button>';
+    } else if (ses.phase === "decide") {
+      html += '<p class="prompt">Decision point. Take the trade, wait, or call it no trade today?</p>';
+      html += '<div class="opts">';
+      html += '<button type="button" class="opt tone-long" id="l2-L">Take long</button>';
+      html += '<button type="button" class="opt tone-short" id="l2-S">Take short</button>';
+      html += '<button type="button" class="opt tone-none" id="l2-W">Wait</button>';
+      html += '<button type="button" class="opt tone-skip" id="l2-N">No trade today</button>';
+      html += "</div>";
+    } else if (ses.phase === "stop") {
+      html += '<p class="prompt">Where is your stop?</p><div class="opts">';
+      l2StopLevels(s, ses.pick).forEach(function (o) {
+        html += '<button type="button" class="opt tone-none" data-l2stop="' + esc(o.v) + '">' + esc(o.l) + "</button>";
+      });
+      html += "</div>";
+    } else if (ses.phase === "target") {
+      html += '<p class="prompt">What is your target?</p><div class="opts">';
+      l2TargetLevels(s, ses.pick).forEach(function (o) {
+        html += '<button type="button" class="opt tone-none" data-l2tgt="' + esc(o.v) + '">' + esc(o.l) + "</button>";
+      });
+      html += "</div>";
+    } else if (ses.phase === "outcome") {
+      var rec = ses.outcome || {};
+      var setup = l2SetupOf(s);
+      var taken = rec.pick === "L" || rec.pick === "S";
+      var tone = rec.okSetup ? "ok" : "bad";
+      if (taken) {
+        html += '<div class="verdict ' + (rec.r >= 0 ? "ok" : "bad") + '">Outcome ' + esc(fmtR(rec.r)) + " · " + esc(fmtUsd(rec.planDollars)) + " at $20/R · " + esc(rec.reason) + "</div>";
+        html += '<p class="muted">1 MNQ at $2/point, minus $1.50 costs. Contract P&amp;L: ' + esc(fmtUsd(rec.dollars)) + ". Practice P&amp;L uses $20/R.</p>";
+      } else {
+        html += '<div class="verdict ' + tone + '">' + (rec.okSetup ? "No trade — that's the right call." : "That was a setup. Passing missed it.") + "</div>";
+      }
+      html += '<div class="gg-checks">';
+      html += '<div class="chk ' + (rec.process && rec.process.setup ? "yes" : "no") + '">' + (rec.process && rec.process.setup ? "✓" : "✗") + " Setup</div>";
+      if (taken) {
+        html += '<div class="chk ' + (rec.process && rec.process.stop ? "yes" : "no") + '">' + (rec.process && rec.process.stop ? "✓" : "✗") + " Stop</div>";
+        html += '<div class="chk ' + (rec.process && rec.process.target ? "yes" : "no") + '">' + (rec.process && rec.process.target ? "✓" : "✗") + " Target</div>";
+      }
+      html += "</div>";
+      if (ses.note) html += "<p>" + esc(ses.note) + "</p>";
+      html += "<p class=\"muted\">Taught answer: " + (setup.action === "N" ? "no trade" : (setup.action === "L" ? "long " : "short ") + (setup.kind === "gg" ? "Golden Gate (target 61.8, stop at the 8)" : "trigger (target 38.2, stop inside the trigger)")) + ".</p>";
+      html += '<button type="button" class="opt tone-none" id="l2-continue">Continue</button>';
+    }
+    html += '<button type="button" class="learn-link" id="l2-back" style="margin-top:12px">Back to spotting</button>';
+    html += "</div>";
+    return html;
+  }
+
+
   function renderLearn() {
     var tr = ALL.filter(function (s) { return s.tag === "tr" && s.q1 === "G"; })[0];
     var gg = ALL.filter(function (s) { return s.tag === "gg" && s.q1 === "G"; })[0];
@@ -1868,14 +2591,25 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
         '<div class="brand">Saty Spotter</div>' +
         '<div class="top-links">' +
           '<button type="button" class="learn-link" id="btn-learn">Learn</button>' +
+          '<button type="button" class="learn-link" id="btn-trade">Trade it</button>' +
           '<button type="button" class="learn-link" id="btn-share">Send my progress</button>' +
         "</div>" +
       "</header>" +
       '<div class="share-note" id="share-note">' + (ui.shareNote ? esc(ui.shareNote) : "") + "</div>" +
-      '<div class="strip" id="strip">You\'re working on: ' + esc(skillLabel(skill)) + " · " + esc(meter) +
-        (ui.focus ? " · focus " + ui.setLogs.filter(function (c) { return c.allOk; }).length + "/" + ui.setLogs.length : "") +
-        (ui.speed && ui.phase === "ask" ? ' · <span class="timer' + (ui.speedLeft && ui.speedLeft <= 3 ? " warn" : "") + '" id="timer">' + (ui.speedLeft || 8) + "s</span>" : "") +
+      '<div class="strip" id="strip">' + (ui.view === "trade"
+        ? "Level 2 · Trade it"
+        : ui.view === "learn"
+          ? "The rules, in order"
+          : ("You\'re working on: " + esc(skillLabel(skill)) + " · " + esc(meter) +
+            (ui.focus ? " · focus " + ui.setLogs.filter(function (c) { return c.allOk; }).length + "/" + ui.setLogs.length : "") +
+            (ui.speed && ui.phase === "ask" ? ' · <span class="timer' + (ui.speedLeft && ui.speedLeft <= 3 ? " warn" : "") + '" id="timer">' + (ui.speedLeft || 8) + "s</span>" : ""))) +
       "</div>";
+
+    if (ui.view === "trade") {
+      root.innerHTML = header + renderTrade();
+      bind();
+      return;
+    }
 
     if (ui.view === "learn") {
       root.innerHTML = header + renderLearn();
@@ -1891,7 +2625,8 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     }
     var q = qidNow();
     var lookLesson = ui.phase === "lesson" && (ui.lessonSkill === "fresh-pull" || q === "qlook");
-    var hl = lookLesson ? "look" : (ui.phase === "lesson" && ui.lessonSkill ? skillHighlight(ui.lessonSkill) : highlightFor(q));
+    var ggLesson = ui.phase === "lesson" && (ui.lessonSkill === "gg" || q === "q3");
+    var hl = lookLesson ? "look" : (ggLesson ? "look" : (ui.phase === "lesson" && ui.lessonSkill ? skillHighlight(ui.lessonSkill) : highlightFor(q)));
     var body = renderChart(s, hl, false);
 
     if (ui.phase === "ask") {
@@ -1908,16 +2643,47 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
         LOOK_RULE.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
         body += "</div>";
         body += "<p>" + esc(lookWhy(s)) + "</p>";
+        var info = lookRanInfo(s);
+        var ranBits = [];
+        if (info.ago == null) ranBits.push("First close: not in this window");
+        else ranBits.push("First close: " + info.ago + " bar" + (info.ago === 1 ? "" : "s") + " ago");
+        if (info.dist != null && isFinite(info.dist)) ranBits.push("Now " + fmtAtrPct(info.dist) + " from the trigger");
+        if (info.at618) ranBits.push("already at 61.8");
+        body += '<div class="ran-cue">' + esc(ranBits.join(" · ")) + "</div>";
         var partner = LOOK_PAIRS[s.id] ? byId(ALL, LOOK_PAIRS[s.id]) : null;
         if (partner) {
           var plabel = lookWant(partner) === "B" ? "Same day, at the first close — a fresh break" : "Same day, after the pullback to the 8";
           body += '<div class="pair-label">' + esc(plabel) + "</div>" + drawChart(partner, N_VIS, "look", true);
         }
+        if (!ui.quiz) ui.quiz = "bars";
+        body += '<p class="prompt">Quick check: how many bars since the first close past the trigger?</p>';
+        if (ui.quiz === "bars") {
+          body += '<div class="opts" id="bars-opts">';
+          BARS_OPTS.forEach(function (o) {
+            body += '<button type="button" class="opt tone-none" data-bars="' + esc(o.v) + '">' + esc(o.l) + "</button>";
+          });
+          body += "</div>";
+        } else if (ui.quiz === "bars-ok") {
+          body += '<div class="verdict ok">Yes — ' + esc((BARS_OPTS.filter(function (o) { return o.v === barsSinceTruth(s); })[0] || {}).l || "") + ".</div>";
+        } else if (ui.quiz === "bars-bad") {
+          body += '<div class="verdict bad">The first close was ' + esc((BARS_OPTS.filter(function (o) { return o.v === barsSinceTruth(s); })[0] || {}).l || "not in this window") + ".</div>";
+        }
+      } else if (ggLesson) {
+        var chk = ggChecks(s);
+        body += '<div class="gg-checks">';
+        body += '<div class="chk ' + (chk.tagged ? "yes" : "no") + '">' + (chk.tagged ? "✓" : "✗") + " 38.2 tagged</div>";
+        body += '<div class="chk ' + (chk.pulled ? "yes" : "no") + '">' + (chk.pulled ? "✓" : "✗") + " Pulled back to the 8 EMA</div>";
+        body += '<div class="chk ' + (chk.held ? "yes" : "no") + '">' + (chk.held ? "✓" : "✗") + " Held, still beyond the trigger</div>";
+        body += "</div>";
+        if (chk.yes) body += "<p>All three are in place. That is a Golden Gate. Target is 61.8.</p>";
+        else body += "<p>" + esc(lessonLines(s, "gg").join(" ")) + "</p>";
       } else {
         lines.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
         if (TAG_WHY[s.tag]) body += "<p>" + esc(TAG_WHY[s.tag]) + "</p>";
       }
-      body += '<button type="button" class="opt tone-none" id="got-it">Got it</button>';
+      if (!(lookLesson && ui.quiz === "bars")) {
+        body += '<button type="button" class="opt tone-none" id="got-it">Got it</button>';
+      }
       body += "</div>";
     }
 
@@ -1931,12 +2697,21 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     if (learn) learn.onclick = function () {
       clearAuto();
       clearSpeed();
+      clearL2Timer();
+      if (save.l2) save.l2.resume = false;
       ui.view = "learn";
       snapshot();
       render();
     };
     var share = el("btn-share");
     if (share) share.onclick = function () { sendProgress(); };
+    var trade = el("btn-trade");
+    if (trade) trade.onclick = function () {
+      clearAuto();
+      clearSpeed();
+      l2StartSession(false);
+      render();
+    };
     var back = el("learn-back");
     if (back) back.onclick = function () {
       ui.view = "play";
@@ -1952,6 +2727,42 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     }
     var got = el("got-it");
     if (got) got.onclick = function () { onGotIt(); };
+    var bars = el("bars-opts");
+    if (bars) {
+      var bbs = bars.querySelectorAll("button[data-bars]");
+      for (var b = 0; b < bbs.length; b++) {
+        bbs[b].onclick = (function (v) { return function () { onBarsPick(v); }; })(bbs[b].getAttribute("data-bars"));
+      }
+    }
+    function hook(id, fn) {
+      var node = el(id);
+      if (node) node.onclick = fn;
+    }
+    hook("l2-start", function () { l2StartSession(true); render(); });
+    hook("l2-back", function () { l2Leave(); });
+    hook("l2-next", function () { l2NextBar(); });
+    hook("l2-skip", function () { l2JumpToDecide(); });
+    hook("l2-L", function () { l2Decide("L"); });
+    hook("l2-S", function () { l2Decide("S"); });
+    hook("l2-W", function () { l2Decide("W"); });
+    hook("l2-N", function () { l2Decide("N"); });
+    hook("l2-continue", function () { l2AfterOutcome(); });
+    var stops = document.querySelectorAll("[data-l2stop]");
+    for (var si = 0; si < stops.length; si++) {
+      stops[si].onclick = (function (v) { return function () { l2ChooseStop(v); }; })(stops[si].getAttribute("data-l2stop"));
+    }
+    var tgts = document.querySelectorAll("[data-l2tgt]");
+    for (var ti = 0; ti < tgts.length; ti++) {
+      tgts[ti].onclick = (function (v) { return function () { l2ChooseTarget(v); }; })(tgts[ti].getAttribute("data-l2tgt"));
+    }
+  }
+
+  function onBarsPick(v) {
+    var s = current();
+    if (!s || ui.quiz !== "bars") return;
+    ui.quiz = v === barsSinceTruth(s) ? "bars-ok" : "bars-bad";
+    snapshot();
+    render();
   }
 
   window.__spotter = {
@@ -1967,6 +2778,18 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
     progressText: progressText,
     lookWant: lookWant,
     skillMeter: function (id) { return skillMeter(save.logs, id, save.skills && save.skills[id]); },
+    q1Unlocked: function () { return q1Unlocked(save); },
+    barsSince: function () { var s = current(); return s ? barsSinceTruth(s) : null; },
+    onBars: onBarsPick,
+    getL2: function () { return save.l2; },
+    l2Start: function (force) { l2StartSession(!!force); render(); },
+    l2Jump: l2JumpToDecide,
+    l2Decide: l2Decide,
+    l2Stop: l2ChooseStop,
+    l2Target: l2ChooseTarget,
+    l2Continue: l2AfterOutcome,
+    l2Setup: function () { var s = l2Current(); return s ? l2SetupOf(s) : null; },
+    l2Current: l2Current,
     step: function (v) {
       onPick(v);
       clearAuto();
@@ -1988,7 +2811,6 @@ E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwY
   begin();
   render();
 })();
-
-  </script>
+</script>
 </body>
 </html>
