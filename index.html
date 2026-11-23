@@ -132,6 +132,16 @@ body {
 .share-note:not(:empty) { padding: 0 0 6px; }
 .timer { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--blue); }
 .timer.warn { color: var(--red); }
+
+.look-rule {
+  background: #161b22;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 0 0 10px;
+}
+.look-rule p { margin: 0 0 8px; font-size: 14px; line-height: 1.45; color: var(--text); }
+.look-rule p:last-child { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -308,8 +318,23 @@ E|-vye6|dn3|6ws|NT|C|GINb|in|h|h|uwcaKJcBvgHxAb4BAKwBvQE8ADa7ARoAzALXAs4CAkizAaY
 E|2m33|ilz|4ab|NT|C|RINb|in|h|h|zgVMFI8CHGsEAFJTVAAgU1AAGj0SAC5BEAIQPygCGkkOAAJlLgAGZywAAHMQAASDAToBMnMEAFaFARQAIDEOADBZSAACyQEWADxfMgAuSxoBJD8mASw/OAIcRwICJlMqAiI5LAAMEwACCBUEAAgdDAAAAAAAAAAAAAAAAAAAAAAAAAAAWDZraAAUGxQAICEgAAAdDgISGRAAPkEsAAIxHgIGLxQBFB0WAgQfAAIQJSI
 Q|-h2vu|18cd|es2|NT|C|GINb|in|h|h|0RPpAXfwBoQCuwK0AgK0A7MDnAMG/gLJA+QCAvoBmwKoAQJsiwO6AQB+/wGiAQTAAscCwgIBfr8BSAJknQGEAQBgtwGoAQCSAeUB1AEALHlCAoABiQF6AAa/AUYCNr8BLAJskwF0BBLXAYYBAqQBwQGOAQA+cWQApAGvATgA/gGPAuYBAhKxARwAKMcBugEBGN8BQACYArUCogIBCm84AU5XRAIINTIAAAAAAAAAAAAAAAAAAAAAAAAAAKwBFikkABhFQgAsNQ4AGiEIASRXDgMeLw4CGCMYAyxBOgRkZ04
 Q|3vjr|1hyl|13ep|NT|C|RINb|in|h|h|zCiwBtAFxRKOC8EMrAytASyPDdABE7wE9wkaAKADrwhOAPADzQ+4DAGKEYcT2BAD1APFDUAS2APjCYIFAP4Fkwk6AowGuwbkAxKgAfEN4gECigW5COwCAK4C+wSwAgjKA6cJZgP8BKcI/AUAjge5Cr4HALAFtwayBgTuAv8JJgMUjwdyFqYBkwhUApIHjQjaBA6wB+MKwAkG6gOJCs4HAOoHnQmCBQD8AY8TPASMAvMHgAUNCLkI/AEI/gW5BrYGCGTrAgAAAAAAAAAAAPkXAK8ixgkK/gXrC4IGO8QCuwfkAiy0AZcHvAUyuAHRDqAIA/YErQi0Bxn6CPMLkggdzAGXCOoFFIgDyRDgBRbiCO0I6AgFqALjBLQB
-E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkGAAQNBgAKFQgBMjMmAhIXCAEQHRwAGh8QAggpAgIoKSICAh0IABQhDgASGxYBECsoANAB1QGyAQFgcVoCDD0YACg7KAAENSQAOFFEADBDRAAQKwgAHisYACgvGAIUJRIABB0YAQIlHgEaGxYBICUcAhQfGgACEQ4BGhkMAAYbGAIQEwgALC0cACAhHg`;
-/* Saty Spotter — standalone. Pack sha256: 8c1f8f0499e9e3f1801b74cb8a87c827e70b9498b53a0deb7c062f94307aea46 */
+E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkGAAQNBgAKFQgBMjMmAhIXCAEQHRwAGh8QAggpAgIoKSICAh0IABQhDgASGxYBECsoANAB1QGyAQFgcVoCDD0YACg7KAAENSQAOFFEADBDRAAQKwgAHisYACgvGAIUJRIABB0YAQIlHgEaGxYBICUcAhQfGgACEQ4BGhkMAAYbGAIQEwgALC0cACAhHg
+Q|5p4l|1uiy|qci|LT|T|GFNb|tr|1b|h|vQZIFIUDwALBAmwAeIkBcggorwJaBjLNAXwC7AH1AegBAiyDAV4DaqMBgAEEGMMBagOqAdUBuAECGKsBQABi1wE2BHSLAYQBApoBpQGcAQOcAZECkAIIetEBqgERVHl6AbQB/wGqAQM6rQGKAQRe2wFsCZoB/QHiAQYImwIYBNgBjQL8AQReuQFeBLIByQFsBoYDrwWwAwHUAoMDqgIB4AKHBYQDAbgB/QHCAQAAqQLgAQaaA60DlgMAggHFAVQBwAH3AYIBAGCzAYwBAEqHAuoBAEiRAXgBwAHDAZ4BBKgCvwLmAQJgjQE+BDBlTAGYAZkBJAIeuwFMBDbTARA
+Q|kc80|2kgc|qs1|LT|X|GFNt|tr|1b|h|zw2cAnr5BH7HAU4CbPsDxAICtAHvAbwBBJQBjwLUAQR6uwGsAQJQax4BqAH1AfIBATJbNgEupQEuA5YClwLeAQFgmQGMAQTSA9cDzAICoAGzASoBWoUBEAKuAfMB7AEEqAW9BZgEAeQEhwXOAwQmdzgKOpkBkgEDYqMCKAAAAACHAZQEowbkBQRW4wFYCa4CvQKkAQzIAa8C6gEBInswBlSdAX4FcIcBZgUkkQFAAJ4CuQKKAQ+wAukDiAMAxgHFAT4FugHTAcYBAJgCzwLWAQJkuwE0AVBnMAIA4wIMA3KpAYIBB1aLAYYBBQCfAXYBtAHnASALsgGxAXg
+E|jc4u|nt1|5lo|LT|T|GFNt|tr|1b|h|OxQUPw4nJgAELwwABhUMAQ4XBAJMSzYAEB8cAjw7OAAEKygACh8gABopDgAaISABFB8QABofHAAAFxAABBkEARYhAAAEFwICEBcEAQoZDgAGHxoBAh8cAhghIAACFwIALi8iAgoTCAEEIxICEhcYAAQbFgEWIwoAvgHPAc4BAowBiwE8AQxJQgASOwQBFG9EAijHAZYBAhR9CAJsc2YAbntmAF59egIWURwBBE8UAARZIg
+E|1lgr|iot|50o|LT|T|GFNo|tr|1b|h|DSULbDg5AgEiJyQCAB0IAgAxBAAeIyQAAEUOAB47MAICJwgCDkE2ATQ1MgAMJwgCDiMeABIhDgAWJwYCIiUiACgvJgAYIxABFEE2ASR5MABonwFWAQSbARYCdoMBfgAWRzYBEl1OAChTUgEKIRYAFkMGAl5fVgAMJRQAKEM2AS4vIAAqLSoADCkiAiAlEAEQLxQAEiUgAg4fCgICNSgAAjcSARgrKAAKGRQCKi0o
+Q|8yvc|23pl|hwy|ST|B|RFNb|tr|1b|h|QwogDjA9KgI2dUABhgGTAY4BBSxXHgI4SzQABLkBDgscSyoICMME7AEAkAK/AooCBmaFATwEQHliBihbAAM+jQEoAkaHAQQCPGcUBjKRAUgCPHVABH7tAd4BARBbFgMKowESBI4BjQFiADpZUgNWeWYARGsMAGiPAYYBAR5HEAFWmQFIA54B1QROAOYC4QOGAQQYjQLcAQE45wIiAZ4BoQIMAlrTAVIAZucB4AEDbLkCOAFYywGWAQI0sQFQAxzHAVoArAG7AbABAQbxAqABACS5AW4AaHV0
+E|fxyi|md7|66l|LT|T|GFNo|tr|1b|h|YAcjIgYZAgIEIQoCAhMIACQnJgAGHQgAACECAB4rCgAWGxQADBEGAgAZBgAKFRQAAB0UABoZEgAQFxABEhUOAAQTDgIKEwQACCUQAR4fHgIGLwwBJC0gAQoXEAAgIx4AeocBXAAWMR4BBEMEARQdDAE8PSIBHCMcAGiVAYwBAoYBtwG4AQEsRzgAIjcGAAKhATYBJD0GAhZLSgAgMSoCPklGAh6JATYAFGMMATZnFAAQNwI
+Q|f9m9|25a4|10tm|LT|T|GFNb|tr|1b|h|jQOWAUi3A6gCpwKmAgBAtQImAeABoQKQAgWUAaEBiAEFEKcBVgB2iwF6CEaTASYBeMUBogELFqUBfAk62wIcBXilAXAHEIEBOgiQA58D0AIBcpEBSgKkAakBLABQjwFWAdAB9wK6AQNM2QE6BKYBuwGMAQC2AusC2gIE4AHPBYoFAVzPBt4BAbgBtwNYAgaJA5YBAYYBswLQAQGaBKkEyAMCrAL3A8YDAIgCswM2ApQG4QbqBAHCBM0FiAUA5gTpBKABApACtwJmBBqbA2YD/gGXA5YCAuoCrwPCAgHIAfsBDgiGAp8E8AIBUOEBUgIigwXOAQF+9wKMAQHqAe0C0AECkAHhAZAB
+Q|l06i|2o25|u3c|ST|T|RFNo|tr|1b|h|zAUeTZkCNI0BWgGCAakBbgcAtwFgAcABlQKAAgwg0wEkCaACnwOaAga6Ae0BFgQ0hQIyARj/AVgHXNcDIgMckQNcA+gBqQKGAgiqAcEBdgMS+wFGAGTnAagBADCxASwBYqkCOgmuAdUCxAIGXM0BVgMO/wIiBqgCpwLoAQNcwQEoBcYB6wFEAfQB7QLSAgIAlQMCBNoB7QLEAgBk5wHkAQSKAcsBWgAmrQIoAByFB7gCCvYB1wNmAG7ZBq4BAeIC3QS8AgKUAd0CxgEA+gGjAtwBCESvAnYBhgGhAgYByAOHBOADAqgCyQK6AQC2AY8CPAFO9wJGALIB5wEq
+E|bi1u|l8e|5lk|ST|X|RFNb|tr|1b|h|VgcLARgdCAIGGQgBABcKABgZGgEOGxoACBkEAAAXBAAIGRQBFCMiAAwVDAAKDQYBAB0UAQQjBAAOExQBAg0GABQjHgESEQgBFhUUARIVBgAUGRYAHi0OAAgpEAASExAAGBsWAAQvAAIEbzQAEFsmARxLBgIYbTgBKE8CACZLCgESTyoBOkVEAQQ1HgAEQxwAAEcgABZNKAAkKxYCdIMBdAAWPxIAEmECARpDOA
+E|9eh0|kr4|3r6|LT|X|GFNb|tr|1b|h|/wFGIpsBIjMiAAYjFgAMHRoAWFlUAAgdCAAyNyoALDMoAAYlDgEMEwgAHh8OAAwjAgASKQgBEhMKADg5MgIWGxoCFh8WASwtJgAIKRABFmNAAiI1HAAaMxQCFh8KAQ43CgKyAbUBqgECArUBPAVSbWgAVllMACpBEgIcKyoAJCseAho1KgI4OTYAFhkEAg4dDgAOKxoACiMCABwtKgAyOy4APj0yAgQjEgAOHRoCPEE6
+Q|el3c|258u|z5v|ST|B|RFNb|tr|1b|h|gAmHAtsB4AQSVxwKLncwAUCjAToENGFOAQqpARoDxgHjAa4BAii/AQ4DYqMBVASYAbsBXgVoyQEEBvIB/QHSAQ4gX0gIBq8BEgJ6nwGSAQB4lwFEAEinAS4DGs0BGAFe1QGeAQFcyQQSANwCoQPsAgIYlwIOAzTFBY4BAhSdA8wBDgDDB5QBCV6HBFwD+gH/ApoCBqgC3QOaAwHsA6sFhAMC6gKbBMgCFX7ZBQQK8gGNB1AGhgOtA3AAngP7A/QDCIQDoQTIAgJIrQPgAQDmAZsCbAW2AccCvAEBTtUCpAICSpECUgM+gwSoAQDGAZsCIAUeowNI
+E|7gti|jty|3lm|LT|T|GFNt|tr|1b|h|cwYCE05ROAEqKQwCCiMEAAxnBAIoNRoBIjMwASozNAEQHRoAJCccAAYhCgIWGwwAEiEGAQgTBgA8RUAAACUWASZbGgAqOTQATLEBRgAezwISAF7JAZYBARSfASYAPF8WAOIB4QHWAQCuAs0CsgIAFl0eAA4fCgEQFQhQFDceACItFgBGRTwABBMMASAjJAAAHwoBCg0OAQIVAgECGQgCMDEeABonJgEMFRAADh0aAgYNCgIQExI
+Q|kln6|2mb7|tc9|LT|B|GFNt|tr|1b|h|5QWiAr4B2QWYAcUBCg1elwFAAowBywFeBqQBjwKoAQSOAbMCKAEOqwOCAgXiAcsCxAIMyAT/BLwECO4B0QO4AwL+Af0B+AEAEqkBXASAAacCgAIGnALvAtoBCoADmQNoCjSJARQD7gHFAmQIoAOfA64BCqIBgwKEAgMQ9wKYAQE+lQIWAgz7ASIC8AHTAtQCAogBuwJSBYYDlwO+AgYgyQHIAQRM6QHGAQDiAZcCjgIC1gG/Ak4GeJ8BVAqiAd8BpgEA/gKzBOwCBdwB8QGoAQGUAfMDogEJMqMCQgQCvwEYBZgCowKeAgTeArUDrgMAhgGfC6gBBMoFiwaMAwCYA68EtAICtAShBr4EAu4B1QJk
+Q|2v20|1sj8|nwx|ST|T|RFNc|tr|1b|h|8ASDAZUBmANAbTYApAHnAeIBBDaPAX4GCqMBYAi2AdUBugEL1gOhBOYDCEDrASQCQrkBXgBYxwFUBjTbASIA3AGhAugBAgCvAl4AygG1AvoBAYoC1wKmAQRoxQI6BYwEkQvkAQmwAr0LqAEBrAPTCLgECZQI0Qm+CQL6AaEH4AYDBqcITgSkBKMEvgMBuASbBgQIigHJBFgHtAbHBpwFAIYBswKEAgGwAdEC8gEErAHNA+4BCgypB9oBAjzBCXYDrAOHBlAB5AHjA7YCB/gEkQbgBAPuArEDYAQ4vwNmA8oG7QbOBQUAwQwkCA6XC5QCCdAC6QigAQK6A70HzgEGtgjTCKwIAc4CkQO8Ag
+E|g4rx|msr|5vd|ST|X|RFNc|tr|1b|h|VgkXGg4XBAAeOxABCCccABwpHAIcJyQBBB0EAhwdCgAEHwYAJCsaAA4jHAEuNzIABCkeABIfGAIGIRoCADEMAiQjDgAIUQgAEEkeAFBRMAAsTSYCPkU6AEpZWAIETQoAGGkyADo/JAEMgwEQAARxBgA8hQGCAQEmaRQACmckADJPGgAu3wFEAlZ5MAFUhQF8AiRXLgIuVQwBNJ8BHgBIdXIAIEUqAgppLAFOV0YCMGVM`;
+/* Saty Spotter — standalone. Pack sha256: f444d31b496c09d3d672fdac1740124194b1a979e7c06804e33ad17b997e9854 */
 (function () {
   "use strict";
 
@@ -320,10 +345,55 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
   var RECENT_WINDOW = 30;
   var MISS_GAP = 12;
   var OK_GAP = 40;
+  var FRESH_BARS = 2; /* first close on this bar or the prior bar (last-cross <= 1) */
+  var SOLID_MIN = 15;
+  var SOLID_N = 20;
+  var SOLID_ACC = 0.85;
+  var MASTER_MIN = 20;
+  var MASTER_N = 20;
+  var MASTER_ACC = 0.90;
   var STORAGE_KEY = "saty-spotter-web-v1";
-  var PACK_SHA = "8c1f8f0499e9e3f1801b74cb8a87c827e70b9498b53a0deb7c062f94307aea46";
+  var PACK_SHA = "f444d31b496c09d3d672fdac1740124194b1a979e7c06804e33ad17b997e9854";
   var ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   var EPOCH = Date.UTC(2024, 11, 1);
+
+  var LOOK_PAIRS = {
+    "s173": "s027",
+    "s027": "s173",
+    "s174": "s029",
+    "s029": "s174",
+    "s175": "s035",
+    "s035": "s175",
+    "s176": "s040",
+    "s040": "s176",
+    "s177": "s046",
+    "s046": "s177",
+    "s178": "s064",
+    "s064": "s178",
+    "s179": "s081",
+    "s081": "s179",
+    "s180": "s084",
+    "s084": "s180",
+    "s181": "s085",
+    "s085": "s181",
+    "s182": "s092",
+    "s092": "s182",
+    "s183": "s100",
+    "s100": "s183",
+    "s184": "s103",
+    "s103": "s184",
+    "s185": "s112",
+    "s112": "s185",
+    "s186": "s119",
+    "s119": "s186",
+    "s187": "s121",
+    "s121": "s187"
+  };
+  var LOOK_RULE = [
+    "Fresh = the first close beyond the trigger was on this bar or the last bar, and it has not pulled back yet.",
+    "Pullback = it already broke and tagged 38.2 earlier, and is now pulling back toward the 8 EMA or the trigger.",
+    "Neither = no first close in the last 2 bars, or chop inside — including a stale old break with no pullback, or a move already at 61.8."
+  ];
 
   var SKILL_DEFS = [
     { id: "ribbon", label: "ribbon color" },
@@ -531,8 +601,10 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
   }
 
   function lookWant(s) {
+    /* Fresh only if this is the first close (q2=F), which means it happened in the last FRESH_BARS.
+       Extended (q2=X) is not fresh: the first close was earlier, and price already ran to 61.8. */
     if (s.q3 === "Y" || s.tag === "nh") return "P";
-    if (s.q2 === "F" || s.q2 === "X") return "B";
+    if (s.q2 === "F") return "B";
     return "N";
   }
 
@@ -572,7 +644,7 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     if (q === "q1") return "Look at the ribbon. Is it green and fanned up, red and fanned down, or twisted / flat?";
     if (q === "q2a") return "Did a 15-minute bar close outside the fence (the box between +23.6 and −23.6)?";
     if (q === "q2b") return "If it closed outside, was it out the side the ribbon points?";
-    if (q === "qlook") return "What are you looking at? A fresh break through the trigger, a pullback after a break, or neither?";
+    if (q === "qlook") return "What are you looking at? A fresh break, a pullback after a break, or neither?";
     if (q === "q2f") return "Is this the first 15-minute close past the trigger, or has price already run to 61.8?";
     if (q === "q3") return "This is a pullback after a break. Did price tag 38.2, then pull back to the fast EMA (the 8) and hold, still beyond the trigger?";
     return "What are you looking at?";
@@ -667,6 +739,76 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     return similar ? s.tag === "gg" : s.tag === "nh" || s.tag === "st" || s.tag === "tr";
   }
 
+  function ribbonSide(s) {
+    if (s.q1 === "G") return "long";
+    if (s.q1 === "R") return "short";
+    return null;
+  }
+
+  function currentCross(s, side) {
+    if (!side) return null;
+    var lv = s.levels;
+    var level = side === "long" ? lv.pTrig : lv.mTrig;
+    var last = null;
+    var bars = s.bars;
+    var j, prev, c;
+    for (j = 1; j < N_VIS; j++) {
+      prev = bars[j - 1].c;
+      c = bars[j].c;
+      if (side === "long" && prev <= level && c > level) last = j;
+      if (side === "short" && prev >= level && c < level) last = j;
+      if (last != null) {
+        if (side === "long" && c < level) last = null;
+        if (side === "short" && c > level) last = null;
+      }
+    }
+    return last;
+  }
+
+  function lookMarks(s) {
+    var side = ribbonSide(s);
+    var br = (typeof s.fc === "number" && s.fc >= 0 && s.fc < N_VIS) ? s.fc : currentCross(s, side);
+    var tag = (typeof s.tg === "number" && s.tg >= 0 && s.tg < N_VIS) ? s.tg : null;
+    var pull = null;
+    var lv = s.levels;
+    var bars = s.bars;
+    if (side && br != null && tag == null) {
+      var lvl382 = side === "long" ? lv.p382 : lv.m382;
+      var t;
+      for (t = br + 1; t < N_VIS; t++) {
+        if (side === "long" && bars[t].h >= lvl382) { tag = t; break; }
+        if (side === "short" && bars[t].l <= lvl382) { tag = t; break; }
+      }
+    }
+    var after = tag != null ? tag : br;
+    if (side && after != null) {
+      var p;
+      for (p = after + 1; p < N_VIS; p++) {
+        var b = bars[p];
+        if (side === "long" && b.l <= b.e8 + 0.25) { pull = p; break; }
+        if (side === "short" && b.h >= b.e8 - 0.25) { pull = p; break; }
+      }
+    }
+    return { br: br, tag: tag, pull: pull, now: N_VIS - 1 };
+  }
+
+  function lookWhy(s) {
+    var look = lookWant(s);
+    if (look === "B") {
+      return "The first close beyond the trigger was in the last " + FRESH_BARS + " bars, and price has not pulled back yet. That's a fresh break.";
+    }
+    if (look === "P") {
+      return "It already broke and tagged 38.2 earlier. Now it is pulling back toward the 8 EMA or the trigger. That's a pullback.";
+    }
+    if (s.tag === "ex") {
+      return "Price already ran to 61.8. The first close was not in the last " + FRESH_BARS + " bars, so this is not a fresh break. That's neither — too late.";
+    }
+    if (s.tag === "st") {
+      return "The first close already happened earlier, and there is no pullback to the 8 after a 38.2 tag. That's neither (a stale break).";
+    }
+    return "There is no first close beyond the trigger in the last " + FRESH_BARS + " bars, and this is not a 38.2 pullback. That's neither.";
+  }
+
   function lessonLines(s, id) {
     if (id === "ribbon") {
       return [
@@ -687,10 +829,7 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
       ];
     }
     if (id === "fresh-pull") {
-      return [
-        lookWant(s) === "B" ? "This is a fresh break: you are looking at a close through the trigger, not a pullback." : lookWant(s) === "P" ? "This is a pullback after a break: 38.2 was already tagged, and price came back." : "This is neither a fresh first close nor a 38.2 pullback setup.",
-        "Fresh break → trigger questions. Pullback → Golden Gate questions. Neither → no trade."
-      ];
+      return LOOK_RULE.concat([lookWhy(s)]);
     }
     if (id === "fresh-stale") {
       return [
@@ -723,16 +862,25 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     return d.getFullYear() + "-" + m + "-" + day;
   }
 
-  function skillMeter(logs, id, bit) {
-    var xs = logs.filter(function (l) { return skillOfLog(l) === id; });
-    if (!xs.length) return "new";
-    var recent = xs.slice(-8);
+  function recentAcc(xs, n) {
+    var recent = xs.slice(-n);
     var ok = 0;
     for (var i = 0; i < recent.length; i++) if (recent[i].correct) ok += 1;
-    var a = acc(ok, recent.length);
-    var today = todayStamp();
-    if (recent.length >= 6 && a >= 0.875 && xs.length >= 8 && bit && bit.lastDay && bit.lastDay !== today) return "mastered";
-    if (recent.length >= 4 && a >= 0.75) return "solid";
+    return { n: recent.length, acc: acc(ok, recent.length), ok: ok };
+  }
+
+  function skillMeter(logs, id, bit) {
+    /* Recomputed from logs every time, so new thresholds apply to existing saves. */
+    var xs = logs.filter(function (l) { return skillOfLog(l) === id; });
+    if (!xs.length) return "new";
+    if (xs.length >= MASTER_MIN) {
+      var m = recentAcc(xs, MASTER_N);
+      if (m.n >= MASTER_MIN && m.acc >= MASTER_ACC) return "mastered";
+    }
+    if (xs.length >= SOLID_MIN) {
+      var s = recentAcc(xs, SOLID_N);
+      if (s.n >= SOLID_MIN && s.acc >= SOLID_ACC) return "solid";
+    }
     return "learning";
   }
 
@@ -979,6 +1127,18 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     return { id: id, n: n, ok: ok, lvl: lvl, rank: meterRank(lvl) };
   }
 
+  function lastSkillAcc(sv, id, n) {
+    var xs = (sv.logs || []).filter(function (l) { return skillOfLog(l) === id; }).slice(-n);
+    var ok = 0;
+    for (var i = 0; i < xs.length; i++) if (xs[i].correct) ok += 1;
+    return { n: xs.length, acc: acc(ok, xs.length) };
+  }
+
+  function q1NeedsDrill(sv) {
+    var a = lastSkillAcc(sv, "fresh-pull", 20);
+    return a.n < 20 || a.acc < 0.85;
+  }
+
   function chooseSkill(sv) {
     var stats = SKILL_DEFS.map(function (d) { return skillStats(sv, d.id); });
     var weak = stats.filter(function (s) { return s.lvl !== "mastered"; });
@@ -987,18 +1147,34 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     var nShown = (sv.shown || []).length;
     if (!weak.length) {
       var i = nShown % stats.length;
-      return { skill: stats[i].id, hard: true, speed: true };
+      return { skill: stats[i].id, hard: true, speed: true, skillOnly: false };
     }
-    /* Mastered skills show up much less often — about one review in seven charts. */
+    /* Mastered basics stay at about 1 in 7. */
     if (mastered.length && nShown && nShown % 7 === 6) {
-      mastered.sort(function (a, b) { return a.n - b.n; });
-      return { skill: mastered[0].id, hard: true, speed: true };
+      var basics = mastered.filter(function (s) { return s.id === "ribbon" || s.id === "fence" || s.id === "side"; });
+      var pool = basics.length ? basics : mastered;
+      pool.sort(function (a, b) { return a.n - b.n; });
+      return { skill: pool[0].id, hard: true, speed: true, skillOnly: true };
+    }
+    /* About half of charts are Q1 contrast drills until 85% on the last 20 look questions. */
+    if (q1NeedsDrill(sv) && nShown % 2 === 0) {
+      return { skill: "fresh-pull", hard: false, speed: false, skillOnly: true, contrast: true };
+    }
+    /* Undersampled later skills get extra reps. */
+    var thin = stats.filter(function (s) {
+      return (s.id === "fresh-stale" || s.id === "extended" || s.id === "gg") && s.n < 15;
+    });
+    if (thin.length) {
+      thin.sort(function (a, b) { return a.n - b.n || a.rank - b.rank; });
+      return { skill: thin[0].id, hard: false, speed: false, skillOnly: true };
     }
     var pick = weak[0];
     return {
       skill: pick.id,
       hard: pick.lvl === "solid" || pick.lvl === "mastered",
-      speed: pick.lvl === "mastered"
+      speed: pick.lvl === "mastered",
+      skillOnly: pick.id === "fresh-pull" && q1NeedsDrill(sv),
+      contrast: pick.id === "fresh-pull" && q1NeedsDrill(sv)
     };
   }
 
@@ -1055,8 +1231,10 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     }
     var decX = padL + slot * N_VIS;
     var glow = highlight === "ribbon";
-    var fenceOn = highlight === "fence";
-    var gateOn = highlight === "gate";
+    var lookOn = highlight === "look";
+    var fenceOn = highlight === "fence" || lookOn;
+    var gateOn = highlight === "gate" || lookOn;
+    var marks = lookOn ? lookMarks(scenario) : null;
     var yTopFence = yAt(Math.min(hi, Math.max(lo, lv.pTrig)));
     var yBotFence = yAt(Math.min(hi, Math.max(lo, lv.mTrig)));
     var parts = [];
@@ -1092,19 +1270,41 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
       var yBot = yAt(Math.min(b.o, b.c));
       var bh = Math.max(1.6, yBot - yTop);
       var isDec = i === N_VIS - 1;
-      var isFc = scenario.fc === i && (gateOn || fenceOn);
-      var isTg = scenario.tg === i && gateOn;
-      if (isFc || isTg || isDec) {
-        parts.push('<rect x="' + (x - bodyW) + '" y="' + padT + '" width="' + (bodyW * 2) + '" height="' + plotH + '" fill="' + (isTg || isFc ? "rgba(210,153,34,0.16)" : "rgba(110,118,129,0.12)") + '"/>');
+      var isFc = marks ? marks.br === i : (scenario.fc === i && (gateOn || fenceOn));
+      var isTg = marks ? marks.tag === i : (scenario.tg === i && gateOn);
+      var isPull = !!(marks && marks.pull === i);
+      if (isFc || isTg || isDec || isPull) {
+        var band = isTg || isFc || isPull ? "rgba(210,153,34,0.18)" : "rgba(110,118,129,0.12)";
+        parts.push('<rect x="' + (x - bodyW) + '" y="' + padT + '" width="' + (bodyW * 2) + '" height="' + plotH + '" fill="' + band + '"/>');
       }
-      parts.push('<line x1="' + x + '" x2="' + x + '" y1="' + yAt(b.h) + '" y2="' + yAt(b.l) + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc ? 2.4 : 1.5) + '"/>');
-      parts.push('<rect x="' + (x - bodyW / 2) + '" y="' + yTop + '" width="' + bodyW + '" height="' + bh + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc ? 2 : 1.2) + '"/>');
+      parts.push('<line x1="' + x + '" x2="' + x + '" y1="' + yAt(b.h) + '" y2="' + yAt(b.l) + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc || isPull ? 2.4 : 1.5) + '"/>');
+      parts.push('<rect x="' + (x - bodyW / 2) + '" y="' + yTop + '" width="' + bodyW + '" height="' + bh + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc || isPull ? 2 : 1.2) + '"/>');
       if (isTg) {
-        var cy = yAt(scenario.code === "SG" || scenario.q1 === "R" ? b.l : b.h);
+        var cy = yAt(scenario.q1 === "R" || scenario.code === "SG" || scenario.code === "ST" ? b.l : b.h);
         parts.push('<circle cx="' + x + '" cy="' + cy + '" r="6" fill="#58a6ff" stroke="#79c0ff" stroke-width="1.5"/>');
       }
+      if (isPull) {
+        parts.push('<circle cx="' + x + '" cy="' + yAt(b.e8) + '" r="5" fill="#d29922" stroke="#e3b341" stroke-width="1.5"/>');
+      }
     });
-    parts.push('<text x="' + (decX - 4) + '" y="' + (padT + plotH + 20) + '" text-anchor="end" fill="#8b949e" font-size="11" font-family="system-ui,sans-serif">Decision</text>');
+    if (lookOn && marks) {
+      var caps = {};
+      function addCap(idx, name) {
+        if (idx == null || idx < 0) return;
+        caps[idx] = (caps[idx] || []);
+        if (caps[idx].indexOf(name) < 0) caps[idx].push(name);
+      }
+      addCap(marks.br, "Break");
+      addCap(marks.tag, "38.2");
+      addCap(marks.pull, "8 EMA");
+      addCap(marks.now, "Now");
+      Object.keys(caps).forEach(function (k) {
+        var i = Number(k);
+        parts.push('<text x="' + xAt(i) + '" y="' + (padT + plotH + 20) + '" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700" font-family="system-ui,sans-serif">' + esc(caps[k].join(" · ")) + "</text>");
+      });
+    } else {
+      parts.push('<text x="' + (decX - 4) + '" y="' + (padT + plotH + 20) + '" text-anchor="end" fill="#8b949e" font-size="11" font-family="system-ui,sans-serif">Decision</text>');
+    }
     parts.push("</svg>");
     return parts.join("");
   }
@@ -1120,6 +1320,8 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     hard: false,
     speed: false,
     timeout: false,
+    skillOnly: false,
+    contrast: false,
     shareNote: "",
     ids: [],
     index: 0,
@@ -1163,7 +1365,7 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
   function questions() {
     var s = current();
     if (!s) return ["qlook"];
-    if (ui.focus && ui.skill) return [skillQid(ui.skill)];
+    if ((ui.focus || ui.skillOnly) && ui.skill) return [skillQid(ui.skill)];
     return guidedQueueFor(s, save.logs);
   }
 
@@ -1188,7 +1390,9 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
       picked: ui.picked,
       ok: ui.ok,
       lessonSkill: ui.lessonSkill,
-      timeout: ui.timeout === true
+      timeout: ui.timeout === true,
+      skillOnly: ui.skillOnly === true,
+      contrast: ui.contrast === true
     };
     writeSave(save);
   }
@@ -1205,6 +1409,8 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     ui.hard = ses.hard === true;
     ui.speed = ses.speed === true;
     ui.timeout = ses.timeout === true;
+    ui.skillOnly = ses.skillOnly === true;
+    ui.contrast = ses.contrast === true;
     ui.ids = ids;
     ui.index = Math.max(0, Math.min(ses.index || 0, ids.length - 1));
     ui.qIndex = Math.max(0, ses.qIndex || 0);
@@ -1225,17 +1431,76 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     return true;
   }
 
+  function lastShownLook() {
+    var shown = save.shown || [];
+    for (var i = shown.length - 1; i >= 0; i--) {
+      var s = byId(ALL, shown[i]);
+      if (s) return lookWant(s);
+    }
+    return null;
+  }
+
+  function pickLookContrast(all, exclude, n) {
+    var blocked = {};
+    (exclude || []).forEach(function (id) { blocked[id] = true; });
+    var out = [];
+    var shown = save.shown || [];
+    var lastId = shown.length ? shown[shown.length - 1] : null;
+    var partner = lastId && LOOK_PAIRS[lastId] ? byId(all, LOOK_PAIRS[lastId]) : null;
+    if (partner && !blocked[partner.id] && spacingOk(partner.id, 1)) {
+      out.push(partner);
+      blocked[partner.id] = true;
+    }
+    var last = lastShownLook();
+    var order = last === "B" ? ["P", "N", "B"] : last === "P" ? ["B", "N", "P"] : ["B", "P", "N"];
+    var relax, o, i;
+    for (relax = 0; relax <= 2 && out.length < n; relax++) {
+      for (o = 0; o < order.length && out.length < n; o++) {
+        var xs = all.filter(function (s) {
+          return !blocked[s.id] && lookWant(s) === order[o] && spacingOk(s.id, relax);
+        });
+        xs = sortCandidates(xs, false);
+        xs.sort(function (a, b) {
+          var pa = LOOK_PAIRS[a.id] ? 0 : 1;
+          var pb = LOOK_PAIRS[b.id] ? 0 : 1;
+          return pa - pb;
+        });
+        if (xs.length) {
+          out.push(xs[0]);
+          blocked[xs[0].id] = true;
+        }
+      }
+    }
+    if (out.length < n) {
+      var rest = pickCharts(all, "fresh-pull", Object.keys(blocked), n - out.length, true, false);
+      for (i = 0; i < rest.length && out.length < n; i++) {
+        if (!blocked[rest[i].id]) {
+          out.push(rest[i]);
+          blocked[rest[i].id] = true;
+        }
+      }
+    }
+    return out.slice(0, n);
+  }
+
   function startPlay(focus, skill, seed, opts) {
     opts = opts || {};
     ui.skill = skill || chooseSkill(save).skill;
     ui.focus = !!focus;
     ui.hard = !focus && !!opts.hard;
     ui.speed = !focus && !!opts.speed;
+    ui.skillOnly = !focus && !!opts.skillOnly;
+    ui.contrast = !!opts.contrast || (!!focus && ui.skill === "fresh-pull");
     ui.timeout = false;
     var exclude = [];
     if (seed) exclude.push(seed.id);
     var n = focus ? 5 : 1;
-    var charts = pickCharts(ALL, ui.skill, exclude, n, !!focus, ui.hard);
+    var charts;
+    if (ui.contrast || (focus && ui.skill === "fresh-pull")) {
+      charts = pickLookContrast(ALL, exclude, n);
+    } else {
+      charts = pickCharts(ALL, ui.skill, exclude, n, !!focus, ui.hard);
+    }
     if (!charts.length) charts = ALL.slice(0, n);
     ui.ids = charts.map(function (s) { return s.id; });
     ui.index = 0;
@@ -1254,14 +1519,14 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
 
   function nextFreshChart() {
     var choice = chooseSkill(save);
-    startPlay(false, choice.skill, current(), { hard: choice.hard, speed: choice.speed });
+    startPlay(false, choice.skill, current(), { hard: choice.hard, speed: choice.speed, skillOnly: choice.skillOnly, contrast: choice.contrast });
   }
 
   function begin() {
     requestPersist();
     if (restoreSession()) return;
     var choice = chooseSkill(save);
-    startPlay(false, choice.skill, null, { hard: choice.hard, speed: choice.speed });
+    startPlay(false, choice.skill, null, { hard: choice.hard, speed: choice.speed, skillOnly: choice.skillOnly, contrast: choice.contrast });
   }
 
   function startSpeedClock() {
@@ -1563,15 +1828,26 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     html += "<h2>The checklist</h2>";
     html += "<ol class='rules'>";
     html += "<li><strong>Ribbon.</strong> Green and fanned up, or red and fanned down. Twisted or flat means stay out.</li>";
-    html += "<li><strong>What are you looking at?</strong> Fresh break, pullback after a break, or neither.</li>";
+    html += "<li><strong>What are you looking at?</strong> " + LOOK_RULE.join(" ") + "</li>";
     html += "<li><strong>Fresh break</strong> is a Trigger only on the first 15-minute close through the trigger, with the ribbon agreeing, and not already at 61.8. Target 38.2.</li>";
     html += "<li><strong>Pullback</strong> is a Golden Gate only if price tagged 38.2, pulled back to the 8 EMA, and held, still beyond the trigger. Target 61.8.</li>";
     html += "<li><strong>Neither</strong> is no trade. Stale is an old break with no 38.2 pullback setup. Extended is already at 61.8 — too late, and not the same as stale.</li>";
     html += "</ol>";
-    if (tr && gg) {
+    var pairFresh = null, pairPull = null;
+    Object.keys(LOOK_PAIRS).forEach(function (id) {
+      if (pairFresh) return;
+      var a = byId(ALL, id);
+      var b = byId(ALL, LOOK_PAIRS[id]);
+      if (a && b && lookWant(a) === "B" && lookWant(b) === "P") { pairFresh = a; pairPull = b; }
+    });
+    if (pairFresh && pairPull) {
+      html += "<h3>Same day: fresh break, then pullback</h3>";
+      html += '<div class="pair"><div><div class="pair-label">Fresh — first close in the last 2 bars</div>' + drawChart(pairFresh, N_VIS, "look", true) + "</div>";
+      html += '<div><div class="pair-label">Later — tagged 38.2, pulling back to the 8</div>' + drawChart(pairPull, N_VIS, "look", true) + "</div></div>";
+    } else if (tr && gg) {
       html += "<h3>Fresh break vs pullback</h3>";
-      html += '<div class="pair"><div><div class="pair-label">Trigger — first close</div>' + drawChart(tr, N_VIS, "fence", true) + "</div>";
-      html += '<div><div class="pair-label">Golden Gate — 38.2, then the 8</div>' + drawChart(gg, N_VIS, "gate", true) + "</div></div>";
+      html += '<div class="pair"><div><div class="pair-label">Trigger — first close</div>' + drawChart(tr, N_VIS, "look", true) + "</div>";
+      html += '<div><div class="pair-label">Golden Gate — 38.2, then the 8</div>' + drawChart(gg, N_VIS, "look", true) + "</div></div>";
     }
     if (st && ex) {
       html += "<h3>Stale vs extended</h3>";
@@ -1614,7 +1890,8 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
       return;
     }
     var q = qidNow();
-    var hl = ui.phase === "lesson" && ui.lessonSkill ? skillHighlight(ui.lessonSkill) : highlightFor(q);
+    var lookLesson = ui.phase === "lesson" && (ui.lessonSkill === "fresh-pull" || q === "qlook");
+    var hl = lookLesson ? "look" : (ui.phase === "lesson" && ui.lessonSkill ? skillHighlight(ui.lessonSkill) : highlightFor(q));
     var body = renderChart(s, hl, false);
 
     if (ui.phase === "ask") {
@@ -1626,8 +1903,20 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
       var lines = lessonLines(s, ui.lessonSkill || skill);
       body += '<div class="verdict bad">' + (ui.timeout ? "Time's up. The answer is " : "Not quite. The answer is ") + esc(labelOf(q, truthOf(s, q))) + ".</div>";
       body += '<div class="lesson">';
-      lines.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
-      if (TAG_WHY[s.tag]) body += "<p>" + esc(TAG_WHY[s.tag]) + "</p>";
+      if (lookLesson) {
+        body += '<div class="look-rule">';
+        LOOK_RULE.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
+        body += "</div>";
+        body += "<p>" + esc(lookWhy(s)) + "</p>";
+        var partner = LOOK_PAIRS[s.id] ? byId(ALL, LOOK_PAIRS[s.id]) : null;
+        if (partner) {
+          var plabel = lookWant(partner) === "B" ? "Same day, at the first close — a fresh break" : "Same day, after the pullback to the 8";
+          body += '<div class="pair-label">' + esc(plabel) + "</div>" + drawChart(partner, N_VIS, "look", true);
+        }
+      } else {
+        lines.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
+        if (TAG_WHY[s.tag]) body += "<p>" + esc(TAG_WHY[s.tag]) + "</p>";
+      }
       body += '<button type="button" class="opt tone-none" id="got-it">Got it</button>';
       body += "</div>";
     }
@@ -1676,6 +1965,8 @@ E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkG
     gotIt: onGotIt,
     want: function () { var s = current(); return s ? truthOf(s, qidNow()) : null; },
     progressText: progressText,
+    lookWant: lookWant,
+    skillMeter: function (id) { return skillMeter(save.logs, id, save.skills && save.skills[id]); },
     step: function (v) {
       onPick(v);
       clearAuto();
