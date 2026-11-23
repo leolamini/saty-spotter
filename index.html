@@ -1461,15 +1461,112 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     return { tagged: tagged, pulled: pulled, held: held, yes: false };
   }
 
+  function barWhen(s, j) {
+    /* tmin is the decision bar (index N_VIS-1); tapes are 15-minute bars. */
+    return fmtPT(s.tmin - (N_VIS - 1 - j) * 15);
+  }
+
+  function first618Tag(s) {
+    /* First wick in the trade direction that tags 61.8 after the current trigger break, inside the visible window only — no lookahead. */
+    var side = ribbonSide(s);
+    if (!side) return null;
+    var lv = s.levels;
+    var bars = s.bars;
+    var br = (typeof s.fc === "number" && s.fc >= 0 && s.fc < N_VIS) ? s.fc : currentCross(s, side);
+    var start = br != null ? br : 0;
+    var j, b, wick, closeThru;
+    for (j = start; j < N_VIS; j++) {
+      b = bars[j];
+      if (side === "short" && b.l <= lv.m618) {
+        wick = lv.m618 - b.l;
+        closeThru = lv.m618 - b.c;
+        return { i: j, side: side, wick: wick, closeThru: closeThru, byWick: closeThru < 0, px: b.l, level: lv.m618, when: barWhen(s, j) };
+      }
+      if (side === "long" && b.h >= lv.p618) {
+        wick = b.h - lv.p618;
+        closeThru = b.c - lv.p618;
+        return { i: j, side: side, wick: wick, closeThru: closeThru, byWick: closeThru < 0, px: b.h, level: lv.p618, when: barWhen(s, j) };
+      }
+    }
+    return null;
+  }
+
+  function closest618Shortfall(s) {
+    var side = ribbonSide(s);
+    if (!side) return null;
+    var lv = s.levels;
+    var vis = s.bars.slice(0, N_VIS);
+    var ext, level;
+    if (side === "long") {
+      ext = Math.max.apply(null, vis.map(function (b) { return b.h; }));
+      level = lv.p618;
+      if (ext >= level) return null;
+      return { pts: level - ext, ext: ext, level: level };
+    }
+    ext = Math.min.apply(null, vis.map(function (b) { return b.l; }));
+    level = lv.m618;
+    if (ext <= level) return null;
+    return { pts: ext - level, ext: ext, level: level };
+  }
+
+  function first618AfterDecision(s) {
+    var side = ribbonSide(s);
+    if (!side) return null;
+    var lv = s.levels;
+    var j;
+    for (j = N_VIS; j < s.bars.length; j++) {
+      if (side === "long" && s.bars[j].h >= lv.p618) return { i: j, when: barWhen(s, j) };
+      if (side === "short" && s.bars[j].l <= lv.m618) return { i: j, when: barWhen(s, j) };
+    }
+    return null;
+  }
+
+  function fmtPts(n) {
+    if (n == null || !isFinite(n)) return "—";
+    return Math.abs(n).toFixed(2);
+  }
+
   function noTradeReason(s) {
     var setup = l2SetupOf(s);
     if (setup.action !== "N") return "This is a trade (" + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ").";
     if (atFullRange(s) || s.tag === "ex" || setup.kind === "ex") return "too late at 1 ATR";
     if (s.tag === "dg" || setup.kind === "dg" || s.q2 === "D") return "ribbon against";
     if (s.q1 === "T" || setup.kind === "tw" || s.tag === "tw") return "chop/inside";
-    if (tagged618SinceBreak(s) || s.tag === "st" || s.tag === "nh" || setup.kind === "st" || setup.kind === "nh") return "stale/past 61.8";
+    if (first618Tag(s)) return "stale/past 61.8";
+    if (s.tag === "nh" || setup.kind === "nh") return "didn't hold the ribbon";
+    if (s.tag === "st" || setup.kind === "st") return "stale — no usable Golden Gate";
     if (s.tag === "in" || s.tag === "nc" || setup.kind === "in" || s.q2 === "I" || s.q2 === "W") return "no trigger break";
     return "chop/inside";
+  }
+
+  function noTradeDetail(s) {
+    var why = noTradeReason(s);
+    var tag618 = first618Tag(s);
+    if (why === "stale/past 61.8" && tag618) {
+      var end = tag618.side === "short" ? "low" : "high";
+      var closeBit = tag618.byWick
+        ? ("The close came back and finished " + fmtPts(Math.abs(tag618.closeThru)) + " points short of 61.8 — a wick tag still counts.")
+        : ("The close also cleared 61.8 by " + fmtPts(tag618.closeThru) + " points.");
+      return "No trade — stale/past 61.8. The " + tag618.when + " bar tagged 61.8 in the " + (tag618.side === "short" ? "short" : "long") + " direction: its " + end + " went " + fmtPts(tag618.wick) + " points through. " + closeBit + " Once 61.8 has been tagged, the Golden Gate is done, even if price comes back. The tagging bar is marked on the chart.";
+    }
+    if (why === "didn't hold the ribbon") {
+      var miss = closest618Shortfall(s);
+      var later = first618AfterDecision(s);
+      var extra = "";
+      if (miss) extra += " Price never tagged 61.8 on this chart — the closest extreme was " + fmtPts(miss.pts) + " points short.";
+      if (later) extra += " 61.8 was first tagged after the decision bar (" + later.when + "); that does not count.";
+      return "No trade — it tagged the Golden Gate (38.2) and pulled back, but it did not hold the ribbon." + extra;
+    }
+    if (why === "stale — no usable Golden Gate") {
+      var miss2 = closest618Shortfall(s);
+      var extra2 = miss2 ? " 61.8 was not tagged — the closest extreme was " + fmtPts(miss2.pts) + " points short." : " 61.8 was not tagged on this chart.";
+      return "No trade — stale. The first close through the trigger already happened, and there is no usable Golden Gate (no 38.2 ribbon pullback that held)." + extra2;
+    }
+    if (why === "no trigger break") return "No trade — there is no first close through the call or put trigger, and no Golden Gate. Wait.";
+    if (why === "too late at 1 ATR") return "No trade — too late at 1 ATR. The last close is already at full range. Mid-range 61.8 is the first target, not 'too late.'";
+    if (why === "ribbon against") return "No trade — the ribbon points the other way. Do not fade a fanned ribbon.";
+    if (why === "chop/inside") return "No trade — the ribbon is twisted or flat, or price is still chopping inside the fence. Stay out.";
+    return "No trade. Reason: " + why + ".";
   }
 
   function lessonLines(s, id) {
@@ -1483,17 +1580,9 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
             : "This is the first close through the trigger, the ribbon agrees, and price is not yet at 1 ATR."
         ];
       }
-      var why = noTradeReason(s);
-      var detail = {
-        "no trigger break": "There is no first close through the call or put trigger, and no Golden Gate. Wait.",
-        "stale/past 61.8": "The first close already happened, and there is no usable Golden Gate. Once 61.8 has been tagged since the trigger break, the Golden Gate is done (stale), even if price comes back.",
-        "too late at 1 ATR": "The last close is already at full range (1 ATR). Too late to chase the day-mode move. Mid-range 61.8 is the first target, not 'too late.'",
-        "ribbon against": "The ribbon points the other way. Do not fade a fanned ribbon.",
-        "chop/inside": "The ribbon is twisted or flat, or price is still chopping inside the fence. Stay out."
-      };
       return [
-        "No trade. Reason: " + why + ".",
-        detail[why] || "Stand aside."
+        noTradeDetail(s),
+        "Reason: " + why + "."
       ];
     }
     if (id === "ribbon") {
@@ -2004,6 +2093,18 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       lo = Math.min(lo, Math.min.apply(null, near.map(function (L) { return L.y; })));
       hi = Math.max(hi, Math.max.apply(null, near.map(function (L) { return L.y; })));
     }
+    var tag618 = first618Tag(scenario);
+    var side618 = ribbonSide(scenario);
+    var lvl618 = side618 === "short" ? lv.m618 : side618 === "long" ? lv.p618 : null;
+    /* Always keep the trade-direction 61.8 line in view on setup charts so a miss or a wick tag is visible. */
+    if (lvl618 != null) {
+      lo = Math.min(lo, lvl618);
+      hi = Math.max(hi, lvl618);
+    }
+    if (tag618) {
+      lo = Math.min(lo, tag618.px, tag618.level);
+      hi = Math.max(hi, tag618.px, tag618.level);
+    }
     if (trade) {
       [trade.entry, trade.exit, trade.stopPx, trade.tgtPx].forEach(function (p) {
         if (p != null && isFinite(p)) { lo = Math.min(lo, p); hi = Math.max(hi, p); }
@@ -2035,10 +2136,14 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       parts.push('<rect x="' + padL + '" y="' + Math.min(yTopFence, yBotFence) + '" width="' + plotW + '" height="' + Math.max(8, Math.abs(yBotFence - yTopFence)) + '" fill="rgba(88,166,255,0.12)"/>');
     }
     visibleLevels.forEach(function (L) {
-      var strong = L.solid || (fenceOn && L.fence) || (gateOn && L.name.indexOf("38.2") >= 0);
-      var stroke = L.solid ? "#6e7681" : fenceOn && L.fence ? "#58a6ff" : "#30363d";
-      parts.push('<line x1="' + padL + '" x2="' + (padL + plotW) + '" y1="' + yAt(L.y) + '" y2="' + yAt(L.y) + '" stroke="' + stroke + '" stroke-width="' + (strong ? 2 : 1) + '"' + (L.solid ? "" : ' stroke-dasharray="5 4"') + '/>');
-      parts.push('<text x="' + (padL + plotW + 6) + '" y="' + (yAt(L.y) + 3) + '" fill="#8b949e" font-size="11" font-family="system-ui,sans-serif">' + esc(L.name) + "</text>");
+      var is618 = tag618 && Math.abs(L.y - tag618.level) < 1e-9;
+      var show618 = lvl618 != null && Math.abs(L.y - lvl618) < 1e-9;
+      var strong = L.solid || (fenceOn && L.fence) || (gateOn && L.name.indexOf("38.2") >= 0) || is618 || show618;
+      var stroke = is618 ? "#e3b341" : show618 ? "#c9a227" : L.solid ? "#6e7681" : fenceOn && L.fence ? "#58a6ff" : "#30363d";
+      var labelFill = is618 || show618 ? "#e3b341" : "#8b949e";
+      var label = L.name + (is618 ? " tagged" : "");
+      parts.push('<line x1="' + padL + '" x2="' + (padL + plotW) + '" y1="' + yAt(L.y) + '" y2="' + yAt(L.y) + '" stroke="' + stroke + '" stroke-width="' + (is618 ? 2.4 : strong ? 2 : 1) + '"' + (L.solid || is618 ? "" : ' stroke-dasharray="5 4"') + '/>');
+      parts.push('<text x="' + (padL + plotW + 6) + '" y="' + (yAt(L.y) + 3) + '" fill="' + labelFill + '" font-size="11" font-family="system-ui,sans-serif">' + esc(label) + "</text>");
     });
     ticks.forEach(function (tv) {
       parts.push('<text x="' + (padL - 6) + '" y="' + (yAt(tv) + 3) + '" text-anchor="end" fill="#8b949e" font-size="11" font-family="system-ui,sans-serif">' + esc(fmt(tv)) + "</text>");
@@ -2064,12 +2169,17 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       var isFc = marks ? marks.br === i : (scenario.fc === i && (gateOn || fenceOn));
       var isTg = marks ? marks.tag === i : (scenario.tg === i && gateOn);
       var isPull = !!(marks && marks.pull === i);
-      if (isFc || isTg || isDec || isPull) {
-        var band = isTg || isFc || isPull ? "rgba(210,153,34,0.18)" : "rgba(110,118,129,0.12)";
+      var is618bar = !!(tag618 && tag618.i === i);
+      if (isFc || isTg || isDec || isPull || is618bar) {
+        var band = is618bar ? "rgba(227,179,65,0.28)" : isTg || isFc || isPull ? "rgba(210,153,34,0.18)" : "rgba(110,118,129,0.12)";
         parts.push('<rect x="' + (x - bodyW) + '" y="' + padT + '" width="' + (bodyW * 2) + '" height="' + plotH + '" fill="' + band + '"/>');
       }
-      parts.push('<line x1="' + x + '" x2="' + x + '" y1="' + yAt(b.h) + '" y2="' + yAt(b.l) + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc || isPull ? 2.4 : 1.5) + '"/>');
-      parts.push('<rect x="' + (x - bodyW / 2) + '" y="' + yTop + '" width="' + bodyW + '" height="' + bh + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc || isPull ? 2 : 1.2) + '"/>');
+      parts.push('<line x1="' + x + '" x2="' + x + '" y1="' + yAt(b.h) + '" y2="' + yAt(b.l) + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc || isPull || is618bar ? 2.4 : 1.5) + '"/>');
+      parts.push('<rect x="' + (x - bodyW / 2) + '" y="' + yTop + '" width="' + bodyW + '" height="' + bh + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (isDec || isFc || isPull || is618bar ? 2 : 1.2) + '"/>');
+      if (is618bar) {
+        parts.push('<circle cx="' + x + '" cy="' + yAt(tag618.px) + '" r="6" fill="#e3b341" stroke="#f0d060" stroke-width="1.5"/>');
+        parts.push('<text x="' + x + '" y="' + (padT + plotH + 20) + '" text-anchor="middle" fill="#e3b341" font-size="10" font-weight="700" font-family="system-ui,sans-serif">61.8 ' + (tag618.byWick ? "wick" : "tag") + "</text>");
+      }
       if (isTg) {
         var cy = yAt(scenario.q1 === "R" || scenario.code === "SG" || scenario.code === "ST" ? b.l : b.h);
         parts.push('<circle cx="' + x + '" cy="' + cy + '" r="6" fill="#58a6ff" stroke="#79c0ff" stroke-width="1.5"/>');
@@ -3030,8 +3140,8 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     ses.phase = "outcome";
     ses.outcome = rec;
     ses.note = okSetup
-      ? (setup.action === "N" ? "Right to stand aside. Reason: " + noTradeReason(s) + "." : "You passed. That setup was a trade.")
-      : (setup.action === "N" ? "There was no trade here. Reason: " + noTradeReason(s) + "." : "That was a real " + (setup.action === "L" ? "long" : "short") + " " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ". Passing missed it.");
+      ? (setup.action === "N" ? "Right to stand aside. " + noTradeDetail(s) : "You passed. That setup was a trade.")
+      : (setup.action === "N" ? "There was no trade here. " + noTradeDetail(s) : "That was a real " + (setup.action === "L" ? "long" : "short") + " " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ". Passing missed it.");
     l2Snap();
     render();
   }
@@ -3092,7 +3202,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     ses.phase = "outcome";
     ses.outcome = rec;
     ses.note = (praise ? praise + " " : "") + stopWhy;
-    if (setup.action === "N") ses.note = (ses.note ? ses.note + " " : "") + "No trade. Reason: " + noTradeReason(s) + ".";
+    if (setup.action === "N") ses.note = (ses.note ? ses.note + " " : "") + noTradeDetail(s);
     l2Snap();
     render();
   }
@@ -3277,7 +3387,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       }
       html += "</div>";
       if (ses.note) html += "<p>" + esc(ses.note) + "</p>";
-      html += "<p class=\"muted\">Taught answer: " + (setup.action === "N" ? "no trade" : (setup.action === "L" ? "long " : "short ") + (setup.kind === "gg" ? "Golden Gate (first official target 61.8, stop at the 8)" : "trigger (first official target 61.8, stop inside the trigger)")) + ".</p>";
+      html += "<p class=\"muted\">Taught answer: " + (setup.action === "N" ? "no trade (" + esc(noTradeReason(s)) + ")" : (setup.action === "L" ? "long " : "short ") + (setup.kind === "gg" ? "Golden Gate (first official target 61.8, stop at the 8)" : "trigger (first official target 61.8, stop inside the trigger)")) + ".</p>";
       html += '<button type="button" class="opt tone-none" id="l2-continue">Continue</button>';
     }
     html += '<button type="button" class="learn-link" id="l2-back" style="margin-top:12px">Back to spotting</button>';
@@ -3704,8 +3814,11 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     l2Continue: l2AfterOutcome,
     l2Setup: function () { var s = l2Current(); return s ? l2SetupOf(s) : null; },
     l2Current: l2Current,
-    noTradeReason: function () { var s = current() || l2Current(); return s ? noTradeReason(s) : null; },
+    noTradeReason: function (s) { s = s || current() || l2Current(); return s ? noTradeReason(s) : null; },
+    noTradeDetail: function (s) { s = s || current() || l2Current(); return s ? noTradeDetail(s) : null; },
+    first618Tag: first618Tag,
     l2ReasonOf: noTradeReason,
+    l2SetupOf: l2SetupOf,
     flags: function () { return save.flags || []; },
     exam: function () { return save.exam; },
     startExam: function (force) { startExam(!!force); render(); },
