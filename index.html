@@ -121,6 +121,17 @@ body {
   .pair > div { flex: 1; min-width: 0; }
 }
 
+
+.top-links { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.share-note {
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 0;
+  padding: 0;
+}
+.share-note:not(:empty) { padding: 0 0 6px; }
+.timer { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--blue); }
+.timer.warn { color: var(--red); }
   </style>
 </head>
 <body>
@@ -249,15 +260,68 @@ Q|6bcl|1vig|m75|NT|C|GSNb|st|18|18|/wLLAR+4A4YDqwPMAgx4rQFkBIIDiQS6AgMewwFeBEB5b
 E|g4u0|msr|5vd|SG|X|RSYc|gg|16|18|TAERIgQdBAIcHQoABB8GACQrGgAOIxwBLjcyAAQpHgASHxgCBiEaAgAxDAIkIw4ACFEIABBJHgBQUTAALE0mAj5FOgBKWVgCBE0KABhpMgA6PyQBDIMBEAAEcQYAPIUBggEBJmkUAApnJAAyTxoALt8BRAJWeTABVIUBfAIkVy4CLlUMATSfAR4ASHVyACBFKgIKaSwBTldGAjBlTAB0vQF0AA4lEgAQlQFCARBVCGFsiQFs
 Q|efm9|23tu|13kd|ST|X|RFNb|tr|1a|h|+wbCA+4B/wegBKUEsgMEugOdBMADCuQD4wOKAQxY9QF6AjTRAbABC8ABjwJoAfIDpQSGBAG+AZMCNAAMkQFEAuwCiQPqAgviAd0ChgECkAL7AsgBEagB4wHcAQKGAdkBxgEIZssCfAY84QG0ARPsAe8C1gER/AT9BLYBA1SBA8gBAIQB8wJCAfoHjwr2CQGeAqEFKBSkAtEGQACkAqkEwgIErAOvCAoKCp8HPgb2BNsGoAYFGqkGNgXYAe0FYgDsA6EFiAEAkgShBOIBDNIBmQOGAgXoAu0DCADuAtsFegn8A6UEpgQEbq0D8gELPJcDpAEFQP8EqgEEhgKrAvgBBXyDA+ICAJQD+wPaAwB2gwJE
 Q|fluo|2aub|w5x|SG|X|RSYo|gg|14|16|4QoUMjWuAsUC4gEKuAHbATIGKpkBZgV4iwFoAAR7CgiqAscCxgEEZrsBJAgAkQESAlpvOgYkxQG8AQYepwEEBrAB3wHaAQJotwFMBIABvwE4BooBywFyCsIB9wGyAQDYAtcCjAEKmgP/A5QCCsQBpQKQAgP+AfUFjAEDsAPBBYgEECylA6wBBIgBxwNgBFKZAzYIwgHtBtQBBLgB4wWmAwLIBb0GiAYDAMkDUAKIAbkCwgEByAHfAqICAmCnAsIBAMYBiwKgAQJI1QFUAqQBuwKWAgaqAdEBMAC+AZ8CvAEBmAG5AR4AwgGXAtgBCJIBzQGEAQAo5QF6BLYB4QFeBkh1Yg
-E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZDAACLwoAGicIAjY3MAIEFwgAAhEMAAYlHAIMEwwBIB8cARojHgAUMSYACLUBAgAUgQEOAQx3EgAIswEsAKIBswGyAQAecSABPGMgAaYBqQGSAQIKzQEMAGCBATwAJj0UABhJJABCcVwAEJ8BWAAwV1AAEIcBKAAiQTgAXGFCACw/AgEeOSAAFC8KAWRvaAEEORYBGEcg`;
-/* Saty Spotter — standalone. Pack sha256: 4f75a0dace3b7945f2f20e867ced033d24fe36e3640c995a15c3c4646b09337c */
+E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZDAACLwoAGicIAjY3MAIEFwgAAhEMAAYlHAIMEwwBIB8cARojHgAUMSYACLUBAgAUgQEOAQx3EgAIswEsAKIBswGyAQAecSABPGMgAaYBqQGSAQIKzQEMAGCBATwAJj0UABhJJABCcVwAEJ8BWAAwV1AAEIcBKAAiQTgAXGFCACw/AgEeOSAAFC8KAWRvaAEEORYBGEcg
+Q|-1sjr0|lp8|5ph|NT|C|GXNb|ex|h|h|igJdT+IBMjMQABYzBAAeMQQGBDUMAA4rAAAkJQoAJj88ASIpDAAiLSwAKCcQABorFAEaOQgBRE8oAA4lAgMqKygCSE0sAQ4rCAIGIRYBBCkSBHZ3ZgAmNQoADjMSAgRXDADQAs8CogIAeoUBcAB2eUgAKl9KAD5fRgJcX1gBdJEBfgAMQzgAWndWABZnYgJGdT4AHCsMADg/JgEsWRAAMkNCAig3LgA4OygACjMuAQY/EA
+Q|-1qls9|nhp|80z|NT|C|RXNb|ex|h|h|7QUiJmsWuwE0ABp1HgEoUQYBHFkCBChtIAByc2gBODcYAQxREAFkY0wCAEMiAyQ1MAIoPyIBGicSAAp7KANGhwEIAGBfXAISXQICBjMwAC49FgAAxwEgATDRAhADKMsBagIygQFUAih5LgQsXz4BEFsAAMACiQOWAgFA+QOGAQEAuwLGAQFwowJsAe4B1QKsAgAg4wFQAFDxAWICBN8BUgRY1wEiAJgB1wHMAQAGnQEyAlCvAU4AcLUBOgSIAcEBAgEIjwFQAViZARQ
+Q|-1o4vf|o74|6nc|NT|C|GXNb|ex|h|h|lAEcMidMV1ABEjUSAChXQAAQPwIAKGtoBAYrDALSAdkBrgEADj8aAhg5HgI+PTICEDcIAiYzKgAeNQwCBDUCAhg/AgIcMyoBSn8EAiY1IgAaWQgAHEUWAUBZPgIuPywBEocBAgBaY1YBxAPfA6YDAHKlAXwFogGzAYYBAM4B4wHgAQBSfXwAmAHDAbIBAIABsQEaALIB0QHKAQAKXzgAIpEBCgIQMRwBDFNGAkRPSgAUcRwAHCkgAA7LBDgAtAGnBjIAwgHVA84C
+E|-1s7hr|8tt|292|NT|C|RXNb|ex|h|h|BgkHGgBNAAAGLQgCJiUaAQIjBAAWGRAAEBcMAgQTCgAOHRAAEBMMAgoPBAAGEQ4BDA0KAAQLCgAEHQwAAjECABQhIAEWIR4ADBkMAQQRAgICEwwBMjMQAAaJARAAMj0wADJLCAEoNRwBAkkGAQwpJgAaPQYAFlkKAhBTAgA+QRIALjEOACJTBgBISUgBICkQAA4rDAAiKSAABD8OAUxRTgAiIw4AEDMmADAxHA
+Q|-1o0g9|nsg|6if|NT|C|RXNb|ex|h|h|6QZargGBAmifAZYBAhp/BAAKXxwCUoMBHAIQywEUADJDGAFygwF0BBTBAQ4BClkmAtoB/QGeAQPSAd0BkgEDMF0aAEBPEgEAexQHFjMkABhFGgAcmwFMAByzARgCygHJAYABAjxvKgAumwECAzp3YgEKYQAEJnEaAl6TAYoBBiJxEAAMhwMSALgBmwKCAgIooQKIAQJWuwFAACitAh4AogG7AaABAOwBmQLkAQIA/QE6AAqJARQBigGXAQwAEo8BVgBquwEMAFqrAQgEKIsCGgDkAfkBvgECZn8U
+E|-1elil|9lz|49e|NT|C|GXNb|ex|h|h|xgE3JYwBBicIAgoTBAIUFxICBEcgABITCgAQNwYABCEUABIXGAEELwgAAhkSABIfIAECERICEBMSABQZFAAGCwoACBcIAQodBgAIFxAB9gH1AcABABZVVgGEAZEBjAEAGFEGAGBnaAASXQ4BVmFUAAI5EgIuOSQAQkFCATI5NgJKWVYANmEKACoxEgAMNQICCDk0ACgpBgAUGxoACC0cADQ3NgAINRAACB0GACxBBgAkJyA
+Q|-1ihhc|sie|8s1|NT|C|RXNb|ex|h|h|vQJcJbUBUnMYACxVFgI2S0wBCJEBKgAqPTIDKI0BPgUgwQEYAQB1TAFgaWIBZnVoAiipASYAWG0wAVp7dgKsAa0BrgEBIlsOA2ZlKgACaTQACIkBOgE+TTgGVo8BSgJCVyoCYoUBcAQgtQEcARTlAyYBIukB2AEJBucCFgGCAY8CBACOAc0BCgBgsQFQAXSTAhACSKECWAG0AbECqgICsgHFAcYBAALzAQwBbJcBeAECqwL2AQIE4wGSAQNq1QEKAlJ3NAYG9QEQAMYBzQHKAQCKAYkBPA
+E|-19wlr|adc|4lm|NT|C|GXNb|ex|h|h|KkAGQDJxCABYXSAAHE0UAfIB9QH0AQEg4wFeAByLARYCFlMeARhnDgIWbVYCbm9AADZNKAEKRw4BgAF/dgEiSwIBYJEBjgEAcIcBgAEAapUBSgBqkwFwAFR1GAFuiQGIAQECYQYBLmEWACiDARgCJE9GAGzVAW4AfLUBtAEAtgHFAawBAagBtQFIABRxKAB2hQGCAQAUfQwCWnViAT49GgBebVAAJkEgAmJtPAAsLRoCBFMIAhRNHgAOMxoCSIsBFgAoOx4
+Q|-1btk9|12aq|fds|NT|C|RXNb|ex|h|h|kQJIGpcBngGdAXgAqgGFAsYBCnBvNAQYwwEEAWLJAUoATm0kBBC5ARQAXoEBQgAIwwEKAzDNAXABUr8BJAMGlQIoAXSDAQ4BcrEBlgEGdq0BBgIQswEsA7gBxQE+BTT/ATwBSl9SAGSrARwIPt0BbgAUlwGAAQGYAf8BZAE8gQE4AB6FA14ATLkBJAGQAesGxgEDpgLdA9gCCf4B/QTeAQAG4wfkAQZu3QYmANAB2wbwBQU65QeMAgEA3QmIBwHQBOMHhAYBzgK3BWIBvAGDBOwDAHCFBVYARpMErAEH5gHnA44BBfgCywayBgDyAe0ExAQ
+E|-17a5c|biv|3om|NT|C|GXNb|ex|h|h|ORogeQpZBABGTxwAJEckATRXTAA6SzQAGDk2AVpfSgEkLywDDDkEAUZlXgFAUx4AGi8EAjIxCAFUZ14AHDsWAAo1BgAiMRoBBlkOADA7PAFkd3YAjgGPAXgCTk0qAQwjAgLMAfEB2gECDm8OAqABuQGYAQBWbQQAOGEkAGRlUABeXU4CEF0KACZFOAIqT0ACREMcAiQjIAIcHw4AGDEWACBDDAAaMRoCOD02AAIhEAAKNwQ
+Q|-1bsfu|10fd|il2|NT|C|RXNb|ex|h|h|ywgcoAFv7gTtBOwDAYoC3QKQAgiQAakBZAM61wLAAQJmtQJ4AdgCkwPAAQCWAZcBOAMK2wEAAaYB2wGmAQRIswGSAQj4AYkC/AEENqEBaAQSqwN4CVBdPgQYjwEIAQTVBHgJBssCdAFWyQOIAQlu3QHeAQecAqkDlAEJ9gHHAugBCIQC3wTQBAX+AssDPgKeAucC2gIB0ALvA1oBiAiPCnIKZoENzgIJtgSrCUQB2gGJCTYB9AG/D1QPlg6VDroMA3L5BZoFAWL5B6ADApAIywiGBAnCCdUJoAkCnAHXBYYCAvwE3wfIBwGyA40FpgEHeKMF2AMFDOMF2gEFEvMErgIB5APjBcYE
+E|-12u7f|cs7|2sz|NT|C|GXNb|ex|h|h|FhcQJG5xbgA6OSAACC0QACQvHAAeIxoBGBkSADA5MgEgLSIACicWABAjBAIMFQIAChkMABAZEAAQGw4CDjECAgYhDAAeIQQANDssAAQlCAAmKwgBEhcMACgvKgAIFRIBDBcOAR5jQABmjQGCAQBOVToAOkE4AEA/MgAuLRwADCkEACYnDAIiJSAAEBsIAgwZCAAKIRIACBMKABAbAgISGxIAEBMOADg3KgIaHQg
+Q|-180s3|13rg|bet|NT|C|RXNb|ex|h|h|lgO5AW2+AzpDKgMOVxAAJkUsAASTATYDQk1OAQhHCgA4QSgCBjsaAEpJQAcSSQIBDDsaABIZFgA0PzQCRIcBhAEACkscBBRLDAJMUUYCAGkaAhJRGgEGSyoCQJcFhgIDoAG7AkYCWOMCVgDWAYsC6AEARPsBVgAC0wYGAqIBsQauAwAcnQKUAQAgtQJGBCyFBAQGbJUHWAP0A60F1gQBAuMCYgHIAoMEvAMB1gGxApYCALwC3QKwAgFUjQLMAQKqAcMBpgEBGokD1AEGWMMBLgE6qwEmBYwC+QPQAw
+E|-n6v0|bld|5kx|NT|C|GXNb|ex|h|h|KgoSKQQTCAQ4SSACJC8mACo1LgEEMwQADiEYAAojIAIaHxAAEBcGAAgjBAAKLxYAEiEcAjRNTAAWXTACKjMYACAzKAAMMQYAFCUeAgAnBgEGGQoAJiskASw3OAAAOQoA/gbpB8gHAFJxTAA0c2QAZHFqAirlAWIA8gH7AfgBADaDAQICZmVKARanAWIAfJcBhgEBFGVSACJfWgBOTRQAUlVIAABbBgA0SwwBAGNCAABlCgCAAX9+
+Q|-17b8i|15tt|d9b|NT|C|RXNb|ex|h|h|MxQXLBhHGAIYPyABREkeAQCJATIFggGRAVIDHGUKASaXARIAAMkBbARaaVABGLMCUgMotQMuAOwBrwIYBW6LBtgCA2j5AmoNhAHNAgASkgHHAbgBA7wB1wEWApABlQKMAQCwAcUBsAECSKUCBgDwAYECwgECANcKaAHEA6MH6gYEsAS/BcoDAJoDiwTUAgG6AYEE2gIBiAKpApQBAQbRAhwDKoMDIAI0hwNUBZAB1wMiAaQDjwSQBALSAucCpAIClAH1A74DAGazAWYAbKUDMAL2Af0CrAICFtUCAADWAckChgEFoAKhAtQBAQDLBSwEMN8DxgI
+E|-bsv0|do0|392|NT|C|GXNb|ex|h|h|AgUBFgoLCAIGIQABEhEQAhIVBgAYHRoBHB8aAhAVBgEEGQgBFhsUAAQXCAAaHRwAAjECAgAVCAIMIQQAEBEEAg4RDgEQFxYAAg8IAgIVCAAGFwQAGCUkABAdFAAWFwQAygOXBNwDAFRjUgACLwgAJCsiAEZbWgBGRzwCMEcoAEBLRgIcKSACFi8QADo7OgAELxoAAhsYAgpfBAIWQRoABCEUASgrJAAaHRgCDiMA
+Q|-14bju|16jo|cqi|NT|C|RXNb|ex|h|h|sQEzJH4EiQJCBADTATYCYpUBhAEAUHtqAHyPAUwABIUCWAE0b0YLQG8wACYvGgBwcUAAXGVGADI7MgAmoQECAippJAU0aV4BSnNAAjBtQgIAiQbIAQTmAdcC2gEFJukBWgAiwQFkAYIBoQF0BVyzAYIBABh7HABYswGwAQdwswYGAD6ZBEACCokDygEBgALbA6YDAgDRAk4ARpkDPAGYAeEDMgBQqQKUAgJIrQNiASDJAqwBA4oDxQPwAgIYrwGsAQIAqwIYAaQBhQJyAM4C9wLuAgVUvQFoAmTJAS4
+E|-5ago|gm7|2uy|NT|C|GXNb|ex|h|h|Jg0RIAYXAgEIERABBhMOAAYNDAACDwwBGh8YAAQfAgAUFRQAEA8EAggPCAAKCwYAChEOARAPAAAGCwgABhMMAQoPCgASEQgBDg8EAAwVFAACFQYABBEQARIXGAEUMTIDrALjApgCAkpTTgAQGRICCCEIAVZ1dAIWMRwBKjMyAUBBQgEEUxAAKEEYABIpBgAsQzYAAiEAABYvKAAIHwAAEiUCABwhIAIMIxYAFBsW
+Q|-wkm6|1c21|ix1|NT|C|RXNb|ex|h|h|/gM5J6UBCMsC0gEDAJMErAEAugK5A+ICBN4BkQKuAQV+f2QDTr8BuAEBCvMBDAK2AZ8C/AECJq0CSgAylQIUBmL1AWgDav8BLgCCAeMBQgRyswKAAQTCAcEBlAEDVukCHgQCmQJIAhDbA0YGDP0DCgSWAssCtgIDdLEBSgR8gQKAAQA6kwJMBGTFARwGLNkBpgEAtALjB9gBBtYBuQaMAQBonwQKAroCjwO0AgNgsQU0BdACrwPoAgfUBO0FjgUEqgS7BYIFAgapBJIBBIQCtwOaAwUU7wS6AQESwQI6ALYCnQPUAQKqBcEFkAMEzAKbA/wCBLoDmwTGAwTaAfUC2gI
+E|lvi|ic5|470|NT|C|GXNb|ex|h|h|nQI4JtUBIkEQACRJAgAeKyAAIE0EAiY5LAEmOSIANksoACxBLgAILxIADi0IAAQfCAEQXwwAGFcWAHqJAYQBAhg5MgEcPwwBJEk2BOYB5QGqAQASPRIAEEk4AUhrUAHEAfkBjgEAIsEBXgDEAcMBvAEB3AHzAewBAZwBoQF+AEBvHgDoAfUB9AEBboEBggEB1AHbAdgBAQKHAWQCMmFUAFJnXAECkQFCAD5dHAAEUQgACIMBBAA8QRgBUn0QARo9LABkcWoAOEkM
+Q|-17yk3|13im|d5v|NT|C|GDNb|dg|h|h|xQ/IAugB1wRokwF2AJICkwK2AQIQnQJ8AFj3AQYFkAGzAqICA0q9Al4EMIcCLAR6hQLWAQGGAbUBmAEArAKvA4YDBdYD2QOWAwE+fyoBQJkCggEDQvsBIgSwAtEC+gEA3gGVAqoBAxDjASIAGrUDfgV6wwE0Ae4C9QL4AQDaAdUE6AMBwAPhA9YBAq4D1QT4AwKaAtcC+gEBvgK/AqACAIICowIQBPQBuQKUAgHSAesBfABc6wJaAFKXAVwG2gL1AsABAnjnAXQAWOUBVAI2mQFeAIAB0wHSAQFA4wISBpoCvQKyAgBgzwEMAm5/FAAOywUqAMIC+QOCAgE2lwT2Ag
+E|-zzz0|dek|338|NT|C|RDNb|dg|h|h|jgIvJa4BGCEgABQdFgIQPxAAPD8mABBBAgIUIwYABC0YACYnIgEWFwACDisAAhobFAECGQgAEhcWAQQfAgAIDwIACDccABYbFgAMXQoAPD8gAhwjIAAGTwYAIjMGAiIzJgAmd1wAZI8BFgIcrwEyACxpTAAIZTYADp0BOgF6qQGmAQEIUxYAggGDAXoCDiEEAlhdUgAKRwIBEikeAAhnJAAUPRIAJGcMABIlDAA2XyQAMjcm
+E|1zvi|ipy|4u4|NT|C|GDNb|dg|h|h|7wUzOh4QVzYCLl0EAg4pDAE8W1gBCCccAExLRgAIMRwBREM8AAI5DAAKMwgAFkkuABhXKAIcPRwBBkcCAAYpHAKYAacBggEAFE8eAiJhFgAWNSIBKlkwAChlVAKIAcUBdgASowEgAB5vCAK6A+kD2AMAtgHtAcgBARZ5VAFA6wHCAQJWiQEcAlCHAXoAGKsBIgEgUSwBepEBLAEQZQwCgAG3AXoCLJUBeAI4WTYCPl8gAmBfUABIX1gCIC8EACo7NA
+Q|-5wn0|1m2p|dbs|NT|C|RDNb|dg|h|h|ggg9iwGaASx7IAOGAY8BXgIiV0gCGnkKBBBBNAggU0oCTFtSBDZDQAIESQYAFjUeAjpNRAM2Q0IBZmVWA1p3YAM2aV4CRFlOABQxHgNcZUgDWHlmA3rJAcIBAS6fAQ4EEn0EAiTPAVgBBLcElAEjOPMFcACoA9UDtgMBasMDpAIDsAHNAlQCRNcFMALIBeEF5gQAhgHHAagBAuIB7QG4AQRyqwEyAZAB+QJYAuIBgwKAAgMajwIWAAaxAwACZPUB6gECIt0C9gEBBMEFJABg+QMqAEblAsIB
+E|3xs6|fqb|8pz|NT|C|GDNb|dg|h|h|yQzWAeABwQRuqQI4A5gB5wFyAY4ByQG0AQTCA90DwgIBkgKRApwBAp4BlQLEAQE82QECAVLHAUIBGt0BxAECzgHrAdABAYIByQEcApwD7QPCAwKgAesBZAG0A40E5gMCGKEDXgPCAv8C9gECHs8BgAEBJPECbABGuwF2ALYB+wJiA/wC8QOwAwWGAaMDLgLkArcExgMGAIEDbgMGyQIuAQjjBKYBAPwH5wiqCALeDZ0P/gwB+gWpED4B9ATfB/4DAM4FmwesBQC6AqkJZgXkApEFZgPABr8GjAYGGt0CBAEQ5QKgAQGQAr8D9AIBsgGPA1YBCIsCVAHYBN0E4gMB5gKrA5oDBXiPA4gD
+Q|-je8o|10pe|i2r|NT|C|RDNb|dg|h|h|vhHjBdcCmgq2AdsBTgBQlwNCCCLPAQ4AjAG7AYoBBkp7HANEswLyAQBUmQMMEi79ASgCAtMDPAFOyQKYAgc+0wSaARXSAqEEngQA6AH9AzINrAKnAxoG+gH3AsICAHyBAhQF3AW9BoIFAcACkQNoCiLrAqIBDnj7AiQi/gG5AoIBCbYBwwXoAQi0AfcCQAZMywYGAzLBBvYFAr4ChQWEBAb6AdMFrAEJ+AL7BpABCrYM+QzgCgL2A70G5AIB4gGfBGAIlAXdBbICBJgEiwe2BgSEBf8F0gMG6gOlBOoDBFK/BP4CB7IC/QOqAgDOAr0E0AEB+gHzBMwBDMAC3wSsAwCOAb8FhAEEQK0D3AI
+Q|1zvi|1uks|out|NT|C|GDNb|dg|h|h|gxm9AtABkgNIiwOQAgD8AfsCKAlWxQFKD+IBmwOOAwI0rQFkEKYCpQKeAgci3QFwBrQCswL+AQYKrwIyAUz9ATwAbKcC3AECFp0D8AECxgHjAtwBARjzAhwFTtcBvgEImgSjBdIECTqrAnoEdKsDfANgkwLcAQHsAfsC5AEAbOsCmAIBmAbHCJIFDjSDBuQCBSKJBjgAyg7JD/gOAKwGowisBwYm4QOaAgKwAqUHzAUI2gKTBWgAugKNBLADAeoB9wWEAQO+Ad0CigIB5APRBFYATLcDWAGiBJ8F2gMDtgHFBMoDBOQB3QKmAQGaApEDigECxgPFA5wDBa4CxQOoAwKUAf8BCgaiAYMCtgE
+Q|-19r30|11bu|lsv|NT|C|RDNb|dg|h|h|mA8T+wEglAH1AeQBBTiPAmgA1gHvAUgCerEBngEGkgGlAR4IEscBjgEDLLkEOgLiAeEBzAEDDKcBSgxakwFwBEyvAWIEygGBAuYBAhJ3UAQGezYCALUBSgdIgQFSAuAFoQjaAggS+wriAw6SAq8FjAEFSNcNmAMHggi5CLIIAtoBxQS4AwSyArcD9AEMlAmbCZwHCliTCMoBAaYB1QKcAQfKA/sDngIQpgHPCqQEAaAF0wbGAQPwBokHigYCsgPdA+QBAPYBqwauAQAk8QS2AwNwnQbaAgKaBI0FjAUBCL0CjgEAQpcERgC+AbcDGADeAv0DigMGigGbAqQBB1qnA9oCAOgB2QJe
+E|-v6k3|d0c|6gr|NT|C|GDNb|dg|h|h|3QQMZiEmgwEmAzppAgFwfT4CCI0BNgJqhwFEAiZjEAEciwEyABhnIAJalQGQAQJKY1YABp8BUAAkeRYABEccADJFQgAcZQYBFlMYApgBoQGaAQAudQoAggGFASgAPI0BEAH8AZkCqgEAgAKtApgCAECPAoICAZIB7QEUAnDDAWQCuAHJAYQBAZ4B3wG+AQJEowEYATifARYAqAHXAdABAAjRAQgBKHFeAXjPAaoBARp3DAF8swGoAQIgjwEIAMYBzQGAAQKQAr0CegBMqQGYAQFWd3IB4AHlAZoBAmJxUA
+Q|e3x|1urd|g0s|NT|C|RDNb|dg|h|h|9gdzO8gCMssBsAEFSGleBkxlLAMwaVoENG9aAhhHBgRAcSYCbocBQAJIaUYAAnUWA74B8QHqAQBwhwFwBChpXgBWc04AYosBSgMmPywAJIUBNgICkQE6AgrbAT4BBt8BogEDngbHBpYGAZwByQJyAS6hBN4CASKZBCIA0gHJBqgBAYQC1QUMAJgBwwJaBNoD5wOyAQDYA9cDaAFS+wLIAQHUAoEDwgEAiAHhAi4AOLsBcAP8AdUCFgLaAvUCsgIByAGdAogCAVKxAZ4BANoB+QHkAQRc0QFmA6QCqQKeAgJInQE2Bh5XKg
+E|eb69|ksw|6ph|NT|C|GDNb|dg|h|h|kQYvKDZobQoBYn9kAkJ9dACgAacBkAEBqAHbAY4BACaxAUgAGJUBGgBEVwYBTm8+AAxhLAJSUxICDlMUAXB1NgA2SxAAfIcBhAEBOkc8ABDFARAAFEVEAm57bAAOX04BYr0COgAutQFuApYBnwI+As4B5QFgAeoB6wHqAQF4hwFIAHBvYAJcf3QAAnMMAXJ7WAJCWzwCiAG/AYYBAFanAaABACJXBgAIUxwADKkBDAEWUQwBWFsyAFJTQgFqeTgAZmtGAh5nDg
+E|-1edpr|9av|4u4|NT|C|RDNb|dg|h|h|hAIXBW46Q0ABLjEWAA4tJgASHRAACCsmACpNSgAcOyYCEDUEAAI/CAEoTz4APDsgASJBIAAKUQ4CKDsAABZDAgFQW0YCdHdiAAIvGgBCR0gBMkEkAEKhAZIBAAqNASAAPoUBAgBAdwIAIpkBNgAu/QEAAFbRAV4CQtUBmAECsAHdAYIBAJIBmwGYAQA2ayYAMo8BIgAKaxQAPndiABKRARoCGHEgAh6rASACCpcBBgLGAd0BqAEAKGdiAIIBvQEmAXh5ag
+E|-1eadr|9db|52o|NT|C|GDNb|dg|h|h|wQVOWmk4PzwATk9KAA5jAABYV1IBCD0WAGh3ZgAoOS4ABmMIABQ9NAEMewYALDsOAGh3SgA4UUQBSmUWAhRVEgAkOxwAQEcGADI5IgIaTR4AIicYAGjTAaIBAGyXAYoBAHCbAXgCGmMAADx1TgF8gwFCAYIBjwGCAQAWYRwCKFMAAFBfRAByhQFsAD4/MAAWPTACOkdEADZLQgIgUQwCHD0OARg1FAGOAo0C+gECUlU8Ah5vDgAmURQ
+Q|-1edpr|tp0|fs1|NT|C|RDNb|dg|h|h|qAZJCdICmAHRAbIBBUhxJAAirwGKAQRimQE6AQiHAXgIrgGbApACDVLjAYQBDTqbAQQEDpUBCgVg0QGYAQh2kwEoBHi1AZQBAUbJAR4EXKUBAgQA8wEKAJoBtQFoApYCmwLYAQQwiwE+DLIBuwG2AQCqAdsByAEBlAO5BPoDBkrZAioCkAG5AwIDvgHdAgoEbqUDbgGMAcUGDgfSAc8EiAIG6gHTBdYDBpYEtQW8Awa2A9UDxgMAogHfAlQGxgHVA5IBBRKDA0QI4gGLA8QCBjCHBFwGSNcCfABWnwRkBCqXBBIGvgT/BOgDA4QB/QLkAgzWAoUEZAeKA4kD6gI
+Q|609u|1vmc|lzf|NT|C|GDNb|dg|h|h|9xF7tgHCASS5A74BAhTrASYDkgG7AowBC5QCwQPcAQa2AvkC6gECCuUBZgG6AYECngEGPpMCugEJerUC4gERJG9CALQCswKMAgGSA68DegU22wEoCcYC4QLaAgVWexoEOOEBEgeaArkCxgEKeK0CBgg05QF6BgTLAZABA+4BuQO2AwfiBu8H2AYAzgGbBY4BMJgC5wWkAQMUkwVWAc4H+weyBQDwA7EF2AMGwgGBAtoBAuIC4QOYAwOSAf8ByAEGjAKlAtoBAaQBqQLiAQJOvwIuAHD7AUQFhgLlAuYBATzFA2AD+gGFBH4BuAHlAqABBuwBvwLeAQSIAb0EDAsanQQmBEKHBdAB
+E|-y7gi|egl|2b9|NT|C|RDNb|dg|h|h|ZBcLRhATEAACFwIABhcAAAYVEgAEBwYBBAcIAAwTFAECEQoCFhcQAAILAAIMDwQAAhcCAAYNDAACFQQCBAkEAggPDgECEQoBFhkIAAoPBAAWFRQCABsIAAhDDAIoRxACEJcBGgESTyYCRkkeAiYtIgEqRz4AFhUIAFxfWAASFwICNDM0ABonIAEIJQgAAkMUAiw3LgIAKRIADhcSABAXDgAKKR4AAisOABQtKA
+E|-nlco|bx3|5o1|NT|C|GDNb|dg|h|h|iwScAVihAgBFEAI6TSICDkUGACg/KAIKLSQCSmVeAAIfAgAgKRgAMjUcAAIxCAIwRTQADjsYAkRFQgACHwIAFiMaACgzHAASKRwADj8kAkRJSAESMwQALi0AAgYzDAAqNQgDjALHApIBAAxbWAFyhwFmAD5VLAD8AYsC5gEARl8gAEjLAVYCvgHTAbIBAExXTgFYWVAALmE+AAQ7CABCX1gBGi8IACJdXgFKS0gAIEUaAChJOAIyOzI
+Q|bpvx|25sa|rzp|NT|C|RDNb|dg|h|h|/hTRA+cC3AhSZTYDenk0FVZ9dAJOZzwDCGtWCUZRJgYYWyYAmAGpAW4BYmEoAkRPPgcC8QEwBqQBywEqCuIB7wG8AQQMOxYDJjssCgqpAVwWTGFGAtgB2QHCAQJ6lwGEAQBolQKUAgQQ9QcSBbQBhwZaAVzhBGoBEP0IkgIK0gbDB74HCpgB6QSGAhDMAtMEmAIC8gaRB64GBjChCDoAxgPjBOYCAnyHAloBSKUCqAEEsAL9A/YCBVyNBvoCA9wBvQOOAwxcgwV0B84B1wKeAgC0A9MDyAIA+AHTAgABjAGTAmYDTJ8CPAm6Av8C4AI
+E|-osml|c1m|4w4|NT|C|GDNb|dg|h|h|kwI2GoMBNk9KAg4hEgAGKwYAAEEKACgpEgEINRYAACcKACQlGAAGQQgAKjUyAhYfHgEWGRgALC0YAgo9AgAkIwYAFjUEAkRJKgASLSAAOEc6ACorCAASIxQBCE8CALwBwQGyAQJYZzQCVpkBcAAcbWwBaI8BhgEBGmMWAjxLEABEmQEEAQhZJgA0RQgALF9IACJLGAJmbWgAMEs6AgpLDAAySUgAAlcsACg9DgASNwIANk8q
+Q|-zzz0|1a9o|d5w|NT|C|RDNb|dg|h|h|vAaXAW3YBFyRAY4BAzZnTAIqrwE6BKwBtQGEAQQq0QEQAjydAQ4EAJcBOgKGAYsBcAM2cxAAMoUBCAZERy4BHF8qAFJhXgMOXQgBMD8aADq5AT4BZG9sAmLdAhYC2gHtAWIEWIkBZgFQ7QIcAlzBARQCmgHJAZ4BAnynBKADBpIDpQQiAnDxBIICArYBjwOYAgRErQLyAQFC8wS+AQTeBP8F/gUAGL8CXgDGA8UDnAMAWMcBHAToAZcC6gEDIoUCAgBUpQFwAiaZA4QBBULVAUICiAGJAywBTokBHgDqAeECjgEA3AHxAagB
+Q|2m33|1uuo|l0l|NT|C|RINb|in|h|h|4h9ILd0EeP0D8AEMdKUGbgV2+QQKAZAElwSOBAJ0xwOcAwN06wJEAfIBxwIsAVSrApoBBaABswNCAyKfBMgCACr3A7wBAQrTA3oBELUE5AEA8gGRAyYEpAPpBJIBAEi/AmAEYsMC9gEEAscGSAbUArsD3gEGtgHnAnADxAGzAqABAbYBiQKaAQSMAZcDLgLuAc0CmgEAigG1AUIDLmkAATKPARIEQrUBOgAAAAAAAAAAAAAAAMYC2AKXBIAEBHSRAUwC2gHrAcwBBQq/AVgChgGZAV4AygH/AdQBAAyBApwBACTvAWoBZJMBZgAWnQEMBzC7AZgB
+Q|-nl9r|zhm|m88|NT|C|GINb|in|h|h|8RjKBKAEiQligwE4BKoBuwFkAgLdARYDjgHVAZgBAUTJAT4EiAKJAvQBCBJZBgBOhQFEA5wBwwFqAUKdAWYAOs0BZgSQAqsCpAIDOssBEAWMAY8BBAYiywEWAZwB3wEmAIAHtQm8BAZYzQLEAgXsAtUD2gIC3AKdA8oCArQJ7wmOCQQwoQNyALQCrQbKAgKmBuMGzgUA2gPtA6wDAMAC1QKEAgCeArcDtgIBFP8BEgDEAqsD5gIANqUCKAWSAdUC0AIClgKjApwCAqIBjQJYAXy9ApICAsQB8wHOAQIYjQEqAMoB0wFcAEKhAQgAPKsBggEErAG/AWYAnAK/ApQCAGydAVQ
+E|3vjr|fqb|9e5|NT|C|RINb|in|h|h|4AvOAboB5QScAs0CygI/DJ0DKgFUiQIGAGT7ARIAkAGDBLgDAZAExQTqAwKOAY0EEgJ6xQKmAQLGAasCGADKAdMBjgECJKMDLAKeAZ0CaABSowFMAnzTAhoCugGvAuYBAPAB4wL6AQCUAb8BugEEZOcCDAAE9wEYAiKxAhwC+AGPArABAugB2QKyAgCYAekC9AECjgK/ArgBAVCTBSwAQN8BhgEBAvkBSACwAb8BvgECHmECAAAAAM0FAPcK8gMAjAL9AvABACD9AToEMq8BmAEBMPkCugECxAGPAvYBAIwC3QL2AQAw+QGwAQR+1wOkAQSEAoMChAICUpkBIgByvwG+AQ
+E|-vye6|dn3|6ws|NT|C|GINb|in|h|h|uwcaKJcBvgHxAb4BAKwBvQE8ADa7ARoAzALXAs4CAkizAaYBAIIBgwFKAFydAVYAkAGjAZgBADJxIgBMsQEUAihVTAASnQEeBJwBpwGUAQEOkQFQAmRlJgBCWSIBTPsBBgEAhQESAaYB5QHYAQGUAbMBoAEAOl8qAIwBmwFsAJQB+QHwAQDyAZUCjgIAEGsGAURFQAMWJSAAAhsGAAAAAAAAAAAAAAAAHiJxCgEOQToABkUCAChNTgAGPzwAJkU+ACJHEAIMMwQCPkMgAgIxIgAkMzA
+E|2m33|ilz|4ab|NT|C|RINb|in|h|h|zgVMFI8CHGsEAFJTVAAgU1AAGj0SAC5BEAIQPygCGkkOAAJlLgAGZywAAHMQAASDAToBMnMEAFaFARQAIDEOADBZSAACyQEWADxfMgAuSxoBJD8mASw/OAIcRwICJlMqAiI5LAAMEwACCBUEAAgdDAAAAAAAAAAAAAAAAAAAAAAAAAAAWDZraAAUGxQAICEgAAAdDgISGRAAPkEsAAIxHgIGLxQBFB0WAgQfAAIQJSI
+Q|-h2vu|18cd|es2|NT|C|GINb|in|h|h|0RPpAXfwBoQCuwK0AgK0A7MDnAMG/gLJA+QCAvoBmwKoAQJsiwO6AQB+/wGiAQTAAscCwgIBfr8BSAJknQGEAQBgtwGoAQCSAeUB1AEALHlCAoABiQF6AAa/AUYCNr8BLAJskwF0BBLXAYYBAqQBwQGOAQA+cWQApAGvATgA/gGPAuYBAhKxARwAKMcBugEBGN8BQACYArUCogIBCm84AU5XRAIINTIAAAAAAAAAAAAAAAAAAAAAAAAAAKwBFikkABhFQgAsNQ4AGiEIASRXDgMeLw4CGCMYAyxBOgRkZ04
+Q|3vjr|1hyl|13ep|NT|C|RINb|in|h|h|zCiwBtAFxRKOC8EMrAytASyPDdABE7wE9wkaAKADrwhOAPADzQ+4DAGKEYcT2BAD1APFDUAS2APjCYIFAP4Fkwk6AowGuwbkAxKgAfEN4gECigW5COwCAK4C+wSwAgjKA6cJZgP8BKcI/AUAjge5Cr4HALAFtwayBgTuAv8JJgMUjwdyFqYBkwhUApIHjQjaBA6wB+MKwAkG6gOJCs4HAOoHnQmCBQD8AY8TPASMAvMHgAUNCLkI/AEI/gW5BrYGCGTrAgAAAAAAAAAAAPkXAK8ixgkK/gXrC4IGO8QCuwfkAiy0AZcHvAUyuAHRDqAIA/YErQi0Bxn6CPMLkggdzAGXCOoFFIgDyRDgBRbiCO0I6AgFqALjBLQB
+E|ckzx|lm8|3jp|NT|C|GINb|in|h|h|8QIqJnMOGRAAKisiAgQXCgAUFxIAGhkOAgAbDgAoMTAACBkGAAQNBgAKFQgBMjMmAhIXCAEQHRwAGh8QAggpAgIoKSICAh0IABQhDgASGxYBECsoANAB1QGyAQFgcVoCDD0YACg7KAAENSQAOFFEADBDRAAQKwgAHisYACgvGAIUJRIABB0YAQIlHgEaGxYBICUcAhQfGgACEQ4BGhkMAAYbGAIQEwgALC0cACAhHg`;
+/* Saty Spotter — standalone. Pack sha256: 8c1f8f0499e9e3f1801b74cb8a87c827e70b9498b53a0deb7c062f94307aea46 */
 (function () {
   "use strict";
 
   var N_VIS = 30;
   var BAR_N = 42;
   var AUTO_OK_MS = 1200;
+  var SPEED_MS = 8000;
+  var RECENT_WINDOW = 30;
+  var MISS_GAP = 12;
+  var OK_GAP = 40;
   var STORAGE_KEY = "saty-spotter-web-v1";
+  var PACK_SHA = "8c1f8f0499e9e3f1801b74cb8a87c827e70b9498b53a0deb7c062f94307aea46";
   var ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   var EPOCH = Date.UTC(2024, 11, 1);
 
@@ -702,26 +766,63 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
   }
 
   function emptySave() {
-    return { v: 1, logs: [], charts: [], misses: [], seen: [], streak: 0, bestStreak: 0, points: 0, skills: {}, session: null };
+    return {
+      v: 1,
+      logs: [],
+      charts: [],
+      misses: [],
+      seen: [],
+      shown: [],
+      lastSeen: {},
+      lastResult: {},
+      streak: 0,
+      bestStreak: 0,
+      points: 0,
+      skills: {},
+      session: null
+    };
+  }
+
+  function rebuildSpacing(s) {
+    var shown = Array.isArray(s.shown) && s.shown.length ? s.shown.slice() : (s.charts || []).map(function (c) { return c.id; });
+    s.shown = shown;
+    var lastSeen = s.lastSeen && typeof s.lastSeen === "object" ? s.lastSeen : {};
+    if (!Object.keys(lastSeen).length) {
+      shown.forEach(function (id, i) { lastSeen[id] = i; });
+    }
+    s.lastSeen = lastSeen;
+    var lastResult = s.lastResult && typeof s.lastResult === "object" ? s.lastResult : {};
+    if (!Object.keys(lastResult).length) {
+      (s.charts || []).forEach(function (c, i) {
+        lastResult[c.id] = { ok: !!c.allOk, at: i };
+      });
+    }
+    s.lastResult = lastResult;
+    return s;
   }
 
   function parseSave(raw) {
     if (!raw) return emptySave();
     try {
       var p = JSON.parse(raw);
-      if (!p || p.v !== 1 || !Array.isArray(p.logs)) return emptySave();
-      return {
+      if (!p || !Array.isArray(p.logs)) return emptySave();
+      /* v is 1 for original and migrated saves. Missing new fields are filled in place. */
+      if (p.v != null && p.v !== 1 && p.v !== 2) return emptySave();
+      return rebuildSpacing({
         v: 1,
         logs: p.logs || [],
         charts: p.charts || [],
         misses: p.misses || [],
         seen: Array.isArray(p.seen) ? p.seen : [],
+        shown: Array.isArray(p.shown) ? p.shown : [],
+        lastSeen: p.lastSeen && typeof p.lastSeen === "object" ? p.lastSeen : {},
+        lastResult: p.lastResult && typeof p.lastResult === "object" ? p.lastResult : {},
         streak: Number(p.streak) || 0,
         bestStreak: Number(p.bestStreak) || 0,
         points: Number(p.points) || 0,
         skills: p.skills && typeof p.skills === "object" ? p.skills : {},
         session: p.session && typeof p.session === "object" ? p.session : null
-      };
+      });
     } catch (e) {
       return emptySave();
     }
@@ -750,34 +851,155 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     } catch (e) {}
   }
 
-  function pickCharts(all, skill, exclude, n, similarFirst) {
-    var used = {};
-    (exclude || []).forEach(function (id) { used[id] = true; });
-    var sim = [], con = [];
+  function difficultyOf(s) {
+    var b = s.bars[N_VIS - 1];
+    if (!b || !s.atr) return 0;
+    var atr = s.atr;
+    var fan = Math.abs(b.e8 - b.e34) / atr;
+    var near = function (level) { return Math.abs(b.c - level) / atr; };
+    var lv = s.levels;
+    var score = 0;
+    if (fan < 0.12) score += 2;
+    else if (fan < 0.18) score += 1;
+    if (near(lv.pTrig) < 0.08 || near(lv.mTrig) < 0.08) score += 2;
+    if (near(lv.p382) < 0.1 || near(lv.m382) < 0.1) score += 1;
+    if (near(lv.p618) < 0.12 || near(lv.m618) < 0.12) score += 2;
+    return score;
+  }
+
+  function skillPool(all, skill, similar) {
+    var out = [];
     for (var i = 0; i < all.length; i++) {
       var s = all[i];
-      if (used[s.id]) continue;
-      if (skillMatches(s, skill, true)) sim.push(s);
-      else if (skillMatches(s, skill, false)) con.push(s);
-    }
-    function take(xs, k) {
-      var copy = xs.slice();
-      var out = [];
-      while (copy.length && out.length < k) {
-        var j = Math.abs((copy[0].tmin + (out.length + 1) * 17)) % copy.length;
-        out.push(copy.splice(j, 1)[0]);
-      }
-      return out;
-    }
-    var sims = take(sim, similarFirst ? 3 : n);
-    var cons = take(con, Math.max(0, n - sims.length));
-    var mixed = sims.concat(cons);
-    if (mixed.length < n) {
-      for (var k = 0; k < all.length && mixed.length < n; k++) {
-        if (!used[all[k].id] && mixed.indexOf(all[k]) < 0) mixed.push(all[k]);
+      if (similar === true) {
+        if (skillMatches(s, skill, true)) out.push(s);
+      } else if (similar === false) {
+        if (skillMatches(s, skill, false)) out.push(s);
+      } else if (skillMatches(s, skill, true) || skillMatches(s, skill, false)) {
+        out.push(s);
       }
     }
-    return mixed.slice(0, n);
+    return out;
+  }
+
+  function recencyAgo(id) {
+    var last = save.lastSeen && save.lastSeen[id];
+    if (last === undefined || last === null) return 1e9;
+    return (save.shown || []).length - 1 - last;
+  }
+
+  function isUnseen(id) {
+    return !save.lastSeen || save.lastSeen[id] === undefined;
+  }
+
+  function spacingOk(id, relax) {
+    var ago = recencyAgo(id);
+    if (ago >= 1e8) return true;
+    if (relax < 2 && ago < RECENT_WINDOW) return false;
+    var res = save.lastResult && save.lastResult[id];
+    if (res && relax < 1) {
+      var gap = res.ok ? OK_GAP : MISS_GAP;
+      /* Misses can return sooner than corrects, but never inside the 30-chart window
+         unless the skill pool is exhausted (relax >= 2). */
+      if (ago < Math.max(gap, res.ok ? OK_GAP : 0)) return false;
+    }
+    return true;
+  }
+
+  function sortCandidates(xs, hard) {
+    return xs.slice().sort(function (a, b) {
+      var ua = isUnseen(a.id) ? 0 : 1;
+      var ub = isUnseen(b.id) ? 0 : 1;
+      if (ua !== ub) return ua - ub;
+      var ga = recencyAgo(a.id);
+      var gb = recencyAgo(b.id);
+      if (gb !== ga) return gb - ga;
+      if (hard) {
+        var da = difficultyOf(a);
+        var db = difficultyOf(b);
+        if (db !== da) return db - da;
+      }
+      return a.tmin - b.tmin;
+    });
+  }
+
+  function pickCharts(all, skill, exclude, n, similarFirst, hard) {
+    var blocked = {};
+    (exclude || []).forEach(function (id) { blocked[id] = true; });
+    function gather(similar, relax) {
+      var pool = skillPool(all, skill, similar);
+      var ok = [];
+      for (var i = 0; i < pool.length; i++) {
+        var s = pool[i];
+        if (blocked[s.id]) continue;
+        if (!spacingOk(s.id, relax)) continue;
+        ok.push(s);
+      }
+      return sortCandidates(ok, hard);
+    }
+    var out = [];
+    function takeFrom(similar, want) {
+      var relax;
+      for (relax = 0; relax <= 2 && want > 0; relax++) {
+        var xs = gather(similar, relax);
+        for (var i = 0; i < xs.length && want > 0; i++) {
+          if (blocked[xs[i].id]) continue;
+          out.push(xs[i]);
+          blocked[xs[i].id] = true;
+          want--;
+        }
+      }
+    }
+    if (similarFirst) {
+      takeFrom(true, Math.min(3, n));
+      takeFrom(false, n - out.length);
+    } else {
+      takeFrom(true, n);
+      if (out.length < n) takeFrom(false, n - out.length);
+    }
+    if (out.length < n) {
+      var rest = sortCandidates(all.filter(function (s) { return !blocked[s.id]; }), hard);
+      for (var k = 0; k < rest.length && out.length < n; k++) {
+        out.push(rest[k]);
+        blocked[rest[k].id] = true;
+      }
+    }
+    return out.slice(0, n);
+  }
+
+  function skillStats(sv, id) {
+    var n = 0, ok = 0;
+    for (var i = 0; i < sv.logs.length; i++) {
+      if (skillOfLog(sv.logs[i]) === id) {
+        n += 1;
+        if (sv.logs[i].correct) ok += 1;
+      }
+    }
+    var lvl = skillMeter(sv.logs, id, sv.skills && sv.skills[id]);
+    return { id: id, n: n, ok: ok, lvl: lvl, rank: meterRank(lvl) };
+  }
+
+  function chooseSkill(sv) {
+    var stats = SKILL_DEFS.map(function (d) { return skillStats(sv, d.id); });
+    var weak = stats.filter(function (s) { return s.lvl !== "mastered"; });
+    var mastered = stats.filter(function (s) { return s.lvl === "mastered"; });
+    weak.sort(function (a, b) { return a.rank - b.rank || a.n - b.n; });
+    var nShown = (sv.shown || []).length;
+    if (!weak.length) {
+      var i = nShown % stats.length;
+      return { skill: stats[i].id, hard: true, speed: true };
+    }
+    /* Mastered skills show up much less often — about one review in seven charts. */
+    if (mastered.length && nShown && nShown % 7 === 6) {
+      mastered.sort(function (a, b) { return a.n - b.n; });
+      return { skill: mastered[0].id, hard: true, speed: true };
+    }
+    var pick = weak[0];
+    return {
+      skill: pick.id,
+      hard: pick.lvl === "solid" || pick.lvl === "mastered",
+      speed: pick.lvl === "mastered"
+    };
   }
 
   function byId(all, id) {
@@ -895,6 +1117,10 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     phase: "ask", /* ask | feedback | lesson */
     skill: "fresh-pull",
     focus: false,
+    hard: false,
+    speed: false,
+    timeout: false,
+    shareNote: "",
     ids: [],
     index: 0,
     qIndex: 0,
@@ -903,9 +1129,32 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     picked: null,
     ok: false,
     lessonSkill: null,
-    startMs: Date.now()
+    startMs: Date.now(),
+    speedLeft: 0
   };
   var autoTimer = null;
+  var speedTimer = null;
+
+  function clearAuto() {
+    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+  }
+
+  function clearSpeed() {
+    if (speedTimer) { clearInterval(speedTimer); speedTimer = null; }
+  }
+
+  function markShown(id) {
+    if (!id) return;
+    save.shown = (save.shown || []).concat([id]);
+    if (!save.lastSeen) save.lastSeen = {};
+    save.lastSeen[id] = save.shown.length - 1;
+  }
+
+  function markResult(id, allOk) {
+    if (!id) return;
+    if (!save.lastResult) save.lastResult = {};
+    save.lastResult[id] = { ok: !!allOk, at: (save.shown || []).length };
+  }
 
   function current() {
     return byId(ALL, ui.ids[ui.index]) || null;
@@ -929,6 +1178,8 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
       phase: ui.phase,
       skill: ui.skill,
       focus: ui.focus,
+      hard: ui.hard === true,
+      speed: ui.speed === true,
       ids: ui.ids,
       index: ui.index,
       qIndex: ui.qIndex,
@@ -936,7 +1187,8 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
       round: ui.round,
       picked: ui.picked,
       ok: ui.ok,
-      lessonSkill: ui.lessonSkill
+      lessonSkill: ui.lessonSkill,
+      timeout: ui.timeout === true
     };
     writeSave(save);
   }
@@ -948,8 +1200,11 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     if (!ids.length) return false;
     ui.view = ses.view === "learn" ? "learn" : "play";
     ui.phase = ses.phase === "feedback" || ses.phase === "lesson" || ses.phase === "ask" ? ses.phase : "ask";
-    ui.skill = ses.skill || lowestSkill(save);
+    ui.skill = ses.skill || chooseSkill(save).skill;
     ui.focus = ses.focus === true;
+    ui.hard = ses.hard === true;
+    ui.speed = ses.speed === true;
+    ui.timeout = ses.timeout === true;
     ui.ids = ids;
     ui.index = Math.max(0, Math.min(ses.index || 0, ids.length - 1));
     ui.qIndex = Math.max(0, ses.qIndex || 0);
@@ -964,20 +1219,23 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
         autoTimer = null;
         afterCorrect();
       }, AUTO_OK_MS);
+    } else if (ui.phase === "ask") {
+      startSpeedClock();
     }
     return true;
   }
 
-  function startPlay(focus, skill, seed) {
-    ui.skill = skill || lowestSkill(save);
+  function startPlay(focus, skill, seed, opts) {
+    opts = opts || {};
+    ui.skill = skill || chooseSkill(save).skill;
     ui.focus = !!focus;
-    var exclude = (save.seen || []).slice(-8);
-    if (seed) exclude = exclude.concat([seed.id]);
+    ui.hard = !focus && !!opts.hard;
+    ui.speed = !focus && !!opts.speed;
+    ui.timeout = false;
+    var exclude = [];
+    if (seed) exclude.push(seed.id);
     var n = focus ? 5 : 1;
-    var charts = pickCharts(ALL, ui.skill, exclude, n, !!focus);
-    if (seed && focus) {
-      /* seed already used for the lesson; drill is new charts */
-    }
+    var charts = pickCharts(ALL, ui.skill, exclude, n, !!focus, ui.hard);
     if (!charts.length) charts = ALL.slice(0, n);
     ui.ids = charts.map(function (s) { return s.id; });
     ui.index = 0;
@@ -990,34 +1248,58 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     ui.view = "play";
     ui.lessonSkill = null;
     ui.startMs = Date.now();
+    if (ui.ids[0]) markShown(ui.ids[0]);
     snapshot();
   }
 
   function nextFreshChart() {
-    save.session = null;
-    startPlay(false, lowestSkill(save), current());
+    var choice = chooseSkill(save);
+    startPlay(false, choice.skill, current(), { hard: choice.hard, speed: choice.speed });
   }
 
   function begin() {
     requestPersist();
     if (restoreSession()) return;
-    startPlay(false, lowestSkill(save), null);
+    var choice = chooseSkill(save);
+    startPlay(false, choice.skill, null, { hard: choice.hard, speed: choice.speed });
   }
 
-  function recordAnswer(ans) {
+  function startSpeedClock() {
+    clearSpeed();
+    ui.speedLeft = 0;
+    if (!ui.speed || ui.phase !== "ask" || ui.view !== "play") return;
+    ui.speedLeft = Math.round(SPEED_MS / 1000);
+    speedTimer = setInterval(function () {
+      ui.speedLeft -= 1;
+      if (ui.speedLeft <= 0) {
+        clearSpeed();
+        onTimeout();
+        return;
+      }
+      var node = el("timer");
+      if (node) {
+        node.textContent = ui.speedLeft + "s";
+        node.className = "timer" + (ui.speedLeft <= 3 ? " warn" : "");
+      }
+    }, 1000);
+  }
+
+  function recordAnswer(ans, timedOut) {
     var s = current();
     if (!s) return;
     var q = qidNow();
     var want = truthOf(s, q);
-    var got = ans;
-    var correct = got === want;
+    var timeout = !!timedOut || ans == null;
+    var got = timeout ? "" : ans;
+    var correct = !timeout && got === want;
     var ms = Math.min(120000, Math.max(0, Date.now() - ui.startMs));
-    var log = { id: s.id, q: q, correct: correct, ms: ms, tag: s.tag, code: s.code };
-    ui.picked = got;
+    var log = { id: s.id, q: q, correct: correct, ms: ms, tag: s.tag, code: s.code, timeout: timeout };
+    ui.picked = timeout ? null : got;
     ui.ok = correct;
+    ui.timeout = timeout;
     ui.round = ui.round.concat([log]);
     save.logs = save.logs.concat([log]);
-    if (!correct) {
+    if (!correct && !timeout) {
       save.misses = save.misses.concat([{ id: s.id, q: q, got: got, want: want, tag: s.tag }]);
     }
     var sk = skillOfLog(log);
@@ -1032,6 +1314,12 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     snapshot();
   }
 
+  function onTimeout() {
+    if (ui.phase !== "ask") return;
+    recordAnswer(null, true);
+    render();
+  }
+
   function closeChartAndAdvance() {
     var s = current();
     if (s) {
@@ -1042,6 +1330,7 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
       save.streak = allOk ? save.streak + 1 : 0;
       save.bestStreak = Math.max(save.bestStreak, save.streak);
       if (save.seen.indexOf(s.id) < 0) save.seen = save.seen.concat([s.id]);
+      markResult(s.id, allOk);
       ui.setLogs = ui.setLogs.concat([{ id: s.id, allOk: allOk }]);
     }
     ui.round = [];
@@ -1065,7 +1354,9 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
       }
       ui.index += 1;
       ui.phase = "ask";
+      ui.timeout = false;
       ui.startMs = Date.now();
+      if (ui.ids[ui.index]) markShown(ui.ids[ui.index]);
       snapshot();
       render();
       return;
@@ -1082,6 +1373,7 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
       ui.qIndex += 1;
       ui.picked = null;
       ui.ok = false;
+      ui.timeout = false;
       ui.phase = "ask";
       ui.startMs = Date.now();
       snapshot();
@@ -1103,6 +1395,7 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
         save.charts = save.charts.concat([{ id: s.id, allOk: allOk, ms: ms }]);
         save.streak = 0;
         if (save.seen.indexOf(s.id) < 0) save.seen = save.seen.concat([s.id]);
+        markResult(s.id, allOk);
       }
       startPlay(true, sk, s);
       render();
@@ -1114,8 +1407,9 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
 
   function onPick(v) {
     if (ui.phase !== "ask") return;
-    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
-    recordAnswer(v);
+    clearAuto();
+    clearSpeed();
+    recordAnswer(v, false);
     render();
     if (ui.ok) {
       autoTimer = setTimeout(function () {
@@ -1125,8 +1419,121 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     }
   }
 
+  /* ---------- progress share ---------- */
+  function median(xs) {
+    if (!xs.length) return null;
+    var a = xs.slice().sort(function (x, y) { return x - y; });
+    var m = Math.floor(a.length / 2);
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  function pct(ok, n) {
+    if (!n) return "—";
+    return Math.round((100 * ok) / n) + "%";
+  }
+
+  function fmtSecs(ms) {
+    if (ms == null || !isFinite(ms)) return "—";
+    return (ms / 1000).toFixed(1) + "s";
+  }
+
+  function progressText() {
+    var logs = save.logs || [];
+    var n = logs.length;
+    var ok = 0;
+    var times = [];
+    for (var i = 0; i < logs.length; i++) {
+      if (logs[i].correct) ok += 1;
+      if (!logs[i].timeout) times.push(logs[i].ms || 0);
+    }
+    var last = logs.slice(-50);
+    var lastOk = 0;
+    for (var j = 0; j < last.length; j++) if (last[j].correct) lastOk += 1;
+    var unique = {};
+    (save.shown || save.seen || []).forEach(function (id) { unique[id] = true; });
+    var seenN = Object.keys(unique).length;
+
+    var lines = [];
+    lines.push("Saty Spotter progress");
+    lines.push("Answered " + n + "  ·  overall " + pct(ok, n) + (last.length ? "  ·  last " + last.length + ": " + pct(lastOk, last.length) : ""));
+    lines.push("Charts seen " + seenN + " of " + ALL.length);
+    lines.push("Median time " + fmtSecs(median(times)) + "  ·  streak " + (save.streak || 0) + " (best " + (save.bestStreak || 0) + ")");
+    lines.push("");
+    lines.push("Skills");
+    SKILL_DEFS.forEach(function (def) {
+      var st = skillStats(save, def.id);
+      var bit = (save.skills && save.skills[def.id]) || null;
+      var lvl = skillMeter(save.logs, def.id, bit);
+      lines.push("• " + def.label + " — " + lvl + ", " + pct(st.ok, st.n) + (st.n ? " (" + st.n + ")" : " (none yet)"));
+    });
+
+    var conf = {};
+    (save.misses || []).forEach(function (m) {
+      if (!m || !m.q) return;
+      var key = m.q + "\t" + (m.want || "") + "\t" + (m.got || "");
+      conf[key] = (conf[key] || 0) + 1;
+    });
+    var confList = Object.keys(conf).map(function (k) {
+      var p = k.split("\t");
+      return { q: p[0], want: p[1], got: p[2], n: conf[k] };
+    }).sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
+    lines.push("");
+    if (confList.length) {
+      lines.push("Most common misses");
+      confList.forEach(function (c) {
+        var sid = skillOfLog({ q: c.q, tag: c.q === "q2f" && c.want === "X" ? "ex" : "" });
+        var skill = sid ? skillLabel(sid) : c.q;
+        lines.push("• " + skill + ": picked “" + labelOf(c.q, c.got) + "” when it was “" + labelOf(c.q, c.want) + "” (" + c.n + ")");
+      });
+    } else {
+      lines.push("Most common misses: none yet");
+    }
+    return lines.join("\n");
+  }
+
+  function setShareNote(msg) {
+    ui.shareNote = msg || "";
+    var node = el("share-note");
+    if (node) node.textContent = ui.shareNote;
+    else if (msg) render();
+  }
+
+  function sendProgress() {
+    var text = progressText();
+    function copied() { setShareNote("Copied — paste it into chat."); }
+    function fallbackTextarea() {
+      try {
+        var ok = window.prompt("Copy your progress and paste it into chat:", text);
+        if (ok !== null) setShareNote("Copy the text and paste it into chat.");
+      } catch (e2) {
+        setShareNote("Could not share from this browser.");
+      }
+    }
+    try {
+      if (navigator.share) {
+        navigator.share({ title: "Saty Spotter progress", text: text }).then(function () {
+          setShareNote("Shared.");
+        }).catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(copied).catch(fallbackTextarea);
+          } else fallbackTextarea();
+        });
+        return;
+      }
+    } catch (e) {}
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(copied).catch(fallbackTextarea);
+        return;
+      }
+    } catch (e3) {}
+    fallbackTextarea();
+  }
+
   /* ---------- render ---------- */
   function el(id) { return document.getElementById(id); }
+
 
   function renderChart(s, highlight, compact) {
     if (!s) return "";
@@ -1183,10 +1590,15 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     var header =
       '<header class="top">' +
         '<div class="brand">Saty Spotter</div>' +
-        '<button type="button" class="learn-link" id="btn-learn">Learn</button>' +
+        '<div class="top-links">' +
+          '<button type="button" class="learn-link" id="btn-learn">Learn</button>' +
+          '<button type="button" class="learn-link" id="btn-share">Send my progress</button>' +
+        "</div>" +
       "</header>" +
+      '<div class="share-note" id="share-note">' + (ui.shareNote ? esc(ui.shareNote) : "") + "</div>" +
       '<div class="strip" id="strip">You\'re working on: ' + esc(skillLabel(skill)) + " · " + esc(meter) +
         (ui.focus ? " · focus " + ui.setLogs.filter(function (c) { return c.allOk; }).length + "/" + ui.setLogs.length : "") +
+        (ui.speed && ui.phase === "ask" ? ' · <span class="timer' + (ui.speedLeft && ui.speedLeft <= 3 ? " warn" : "") + '" id="timer">' + (ui.speedLeft || 8) + "s</span>" : "") +
       "</div>";
 
     if (ui.view === "learn") {
@@ -1212,7 +1624,7 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
       body += '<div class="verdict ok">Yes — ' + esc(labelOf(q, truthOf(s, q))) + "</div>";
     } else if (ui.phase === "lesson") {
       var lines = lessonLines(s, ui.lessonSkill || skill);
-      body += '<div class="verdict bad">Not quite. The answer is ' + esc(labelOf(q, truthOf(s, q))) + ".</div>";
+      body += '<div class="verdict bad">' + (ui.timeout ? "Time's up. The answer is " : "Not quite. The answer is ") + esc(labelOf(q, truthOf(s, q))) + ".</div>";
       body += '<div class="lesson">';
       lines.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
       if (TAG_WHY[s.tag]) body += "<p>" + esc(TAG_WHY[s.tag]) + "</p>";
@@ -1222,16 +1634,20 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
 
     root.innerHTML = header + '<div class="stage">' + body + "</div>";
     bind();
+    if (ui.view === "play" && ui.phase === "ask" && ui.speed && !speedTimer) startSpeedClock();
   }
 
   function bind() {
     var learn = el("btn-learn");
     if (learn) learn.onclick = function () {
-      if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+      clearAuto();
+      clearSpeed();
       ui.view = "learn";
       snapshot();
       render();
     };
+    var share = el("btn-share");
+    if (share) share.onclick = function () { sendProgress(); };
     var back = el("learn-back");
     if (back) back.onclick = function () {
       ui.view = "play";
@@ -1257,7 +1673,25 @@ E|bpwr|l3a|5ev|NT|C|RDNo|dg|h|h|kAVnW/QBGiMiAAQRBgEGGRgBDBUQAAYRBAIKEwoADA8GARoZ
     all: ALL,
     key: STORAGE_KEY,
     pick: onPick,
-    gotIt: onGotIt
+    gotIt: onGotIt,
+    want: function () { var s = current(); return s ? truthOf(s, qidNow()) : null; },
+    progressText: progressText,
+    step: function (v) {
+      onPick(v);
+      clearAuto();
+      if (ui.ok) afterCorrect();
+      else onGotIt();
+    },
+    pools: function () {
+      var out = {};
+      SKILL_DEFS.forEach(function (d) {
+        out[d.id] = {
+          similar: skillPool(ALL, d.id, true).length,
+          contrast: skillPool(ALL, d.id, false).length
+        };
+      });
+      return out;
+    }
   };
 
   begin();
