@@ -184,6 +184,34 @@ body {
 .l2-strip { font-size: 13px; }
 .stage h2 { font-size: 20px; margin: 0 0 10px; }
 
+
+.top { flex-wrap: wrap; }
+.top-links { flex-wrap: wrap; justify-content: flex-end; row-gap: 0; }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.45; }
+.flag-wrap { margin: 0 0 10px; }
+.flag-btn {
+  background: none; border: none; color: var(--muted);
+  font: inherit; font-size: 12px; font-weight: 600;
+  padding: 6px 0; cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.flag-box { margin-top: 6px; }
+.flag-box textarea {
+  width: 100%; min-height: 64px; margin: 6px 0;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--card);
+  color: var(--text); font: inherit; font-size: 15px;
+}
+.flag-saved { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+.exam-badge {
+  display: inline-block;
+  background: #211e14; border: 1px solid #3d3419; color: #e3b341;
+  border-radius: 999px; padding: 4px 10px; margin: 0 0 10px;
+  font-size: 12px; font-weight: 700;
+}
+.cite { font-size: 13px; color: var(--muted); }
+.cite a { color: var(--blue); }
+
 </style>
 </head>
 <body>
@@ -713,8 +741,200 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     { id: "fresh-pull", label: "fresh vs pullback" },
     { id: "fresh-stale", label: "fresh vs stale" },
     { id: "extended", label: "past 1 ATR" },
-    { id: "gg", label: "Golden Gate" }
+    { id: "gg", label: "Golden Gate" },
+    { id: "no-trade", label: "trade or no trade?" }
   ];
+  var QNT_OPTS = [
+    { v: "T", l: "Trade" },
+    { v: "N", l: "No trade" }
+  ];
+
+  /* Saty answer key. Every item is a rule question cited to his videos.
+     None of these are his exact charts — we could not faithfully reproduce
+     the Tesla / QQQ / IWM / SPY / Apple examples from our NQ/ES pack. */
+  var SATY_EXAM = [
+    { id: "e01", kind: "rule",
+      q: "What does Saty call the Golden Gate?",
+      opts: [
+        { v: "A", l: "The 38.2 ATR level itself" },
+        { v: "B", l: "A specific candle pattern at the 8 EMA" },
+        { v: "C", l: "The 61.8 mid-range, which he also calls the Golden FIB" }
+      ],
+      want: "A",
+      why: "Golden Gate is the ±38.2 ATR level — the level just beyond the call or put trigger — not a candle pattern. 61.8 is the Golden FIB, the first official target of the play.",
+      cite: "The Golden Gate Strat, 5:21–5:27",
+      url: "https://www.youtube.com/watch?v=d43HaLb765k&t=321s"
+    },
+    { id: "e02", kind: "rule",
+      q: "If price tags 38.2 (the Golden Gate), about what chance does he quote of it reaching 61.8?",
+      opts: [
+        { v: "A", l: "About 50%" },
+        { v: "B", l: "About 60%" },
+        { v: "C", l: "About 90%" }
+      ],
+      want: "B",
+      why: "He says that if price reaches 38.2, there is about a 60% chance it reaches 61.8. That alone, he says, is an edge you could trade exclusively.",
+      cite: "The Golden Gate Strat, 4:14–5:46",
+      url: "https://www.youtube.com/watch?v=d43HaLb765k&t=254s"
+    },
+    { id: "e03", kind: "rule",
+      q: "What is the first official profit target on his ATR map?",
+      opts: [
+        { v: "A", l: "38.2, the Golden Gate" },
+        { v: "B", l: "Mid-range 61.8, the Golden FIB" },
+        { v: "C", l: "Full range (1 ATR)" }
+      ],
+      want: "B",
+      why: "He chose 61.8 as the first possible profit target ('hopefully… at least half range'). Full range (1 ATR) is the possible ideal target. 38.2 is the Golden Gate — a first scale, not the official target.",
+      cite: "Saty ATR Levels Overview, 6:44–6:54",
+      url: "https://www.youtube.com/watch?v=tGS2-KI1VUA&t=404s"
+    },
+    { id: "e04", kind: "rule",
+      q: "When is a day-mode move 'too late' to chase?",
+      opts: [
+        { v: "A", l: "As soon as price tags mid-range 61.8" },
+        { v: "B", l: "When the last close is already at full range (1 ATR)" },
+        { v: "C", l: "After the first close through the trigger" }
+      ],
+      want: "B",
+      why: "61.8 is mid-range — the first target, with room still to 1 ATR. Full range (1 ATR) is the ideal day target. The typical day is less than 1 ATR, which is why he often leaves extensions off.",
+      cite: "Saty ATR Levels Overview, 6:47–6:54 and 12:16–13:05",
+      url: "https://www.youtube.com/watch?v=tGS2-KI1VUA&t=407s"
+    },
+    { id: "e05", kind: "rule",
+      q: "After 38.2 is tagged, what entry does he actually look for?",
+      opts: [
+        { v: "A", l: "Buy or sell the first touch of 38.2, with no pullback" },
+        { v: "B", l: "A pullback to the ribbon (48 / 34 / 21 / 13) or a recapture of the call/put trigger, with a clear stacked trend — and only if 61.8 has not already been tagged" },
+        { v: "C", l: "A close back through previous day's close, fading the move" }
+      ],
+      want: "B",
+      why: "The 60% 38.2→61.8 figure is the statistic. His added entry (not part of the statistic) is a clearly trending ribbon, then a pullback to the ribbon or a recovery of the trigger. Once 61.8 has been tagged, that Golden Gate is complete (he counts a hit, including a gap through it).",
+      cite: "The Golden Gate Strat, 8:25–9:42 and 18:32–18:42",
+      url: "https://www.youtube.com/watch?v=d43HaLb765k&t=505s"
+    },
+    { id: "e06", kind: "rule",
+      q: "If 61.8 (the Golden FIB) has already been tagged since the trigger break, and price then comes back to the ribbon, is that still a Golden Gate entry?",
+      opts: [
+        { v: "A", l: "Yes — a pullback after 61.8 is an even better Golden Gate" },
+        { v: "B", l: "No. Once 61.8 has been tagged, the Golden Gate is done (stale), even if price comes back" },
+        { v: "C", l: "Only if the ribbon is still fanned" }
+      ],
+      want: "B",
+      why: "61.8 is the completion target of the Golden Gate play. He counts the play complete when price hits the level, including a gap through it. Coming back afterward is not a new Golden Gate.",
+      cite: "The Golden Gate Strat, 5:21–5:46 and 18:32–18:42",
+      url: "https://www.youtube.com/watch?v=d43HaLb765k&t=321s"
+    },
+    { id: "e07", kind: "rule",
+      q: "The ribbon is twisted, crossed, or sideways, and price is testing the put trigger. What does he do?",
+      opts: [
+        { v: "A", l: "Take the short anyway — a trigger touch is enough" },
+        { v: "B", l: "Stay out. He calls this 'not an exciting trade' and uses crossed / tangled EMAs to identify where not to take a trade" },
+        { v: "C", l: "Fade it and go long at the put trigger" }
+      ],
+      want: "B",
+      why: "In the overview he walks a chart around 11 o'clock that tests the put trigger with sideways trend lines: 'this is not an exciting trade' and 'isn't something I'm going to take.' The ribbon tutorial says crossovers indicate a weaker trend, a trend change, or chop — useful for identifying where not to take a trade.",
+      cite: "ATR Levels Overview, 13:22–13:59; Pivot Ribbon Tutorial, 5:11–5:28",
+      url: "https://www.youtube.com/watch?v=tGS2-KI1VUA&t=802s"
+    },
+    { id: "e08", kind: "rule",
+      q: "The ribbon is clearly stacked and fanned. Price then closes through the opposite trigger. Do you fade it?",
+      opts: [
+        { v: "A", l: "Yes — a close through the other trigger is a reversal" },
+        { v: "B", l: "No. Do not fade a clearly fanned / stacked trend" },
+        { v: "C", l: "Only fade it if 38.2 is also tagged" }
+      ],
+      want: "B",
+      why: "He endorses Ripster's Golden Rule of Trend: do not fade a clearly fanned / stacked trend. That is the ancestor of 'never fade a fanned ribbon.'",
+      cite: "Ripster EMA Clouds and the Golden Rule of Trend; Pivot Ribbon Tutorial, 4:50–5:28",
+      url: "https://www.youtube.com/watch?v=aTxbUec7rMo"
+    },
+    { id: "e09", kind: "rule",
+      q: "On the day-mode map, what are the default call and put triggers, and what sits between them?",
+      opts: [
+        { v: "A", l: "Call trigger +38.2, put trigger −38.2, mid-range in between" },
+        { v: "B", l: "Call trigger +23.6, put trigger −23.6, previous day's close as the central pivot" },
+        { v: "C", l: "Call trigger +61.8, put trigger −61.8, the 8 EMA in between" }
+      ],
+      want: "B",
+      why: "Blue is the long (call) trigger at +23.6, yellow is the short (put) trigger at −23.6, and previous close is the central pivot. Those names show up constantly in his pre-market planning too.",
+      cite: "ATR Levels Overview, 9:17–9:25 and 12:14–12:54",
+      url: "https://www.youtube.com/watch?v=tGS2-KI1VUA&t=557s"
+    },
+    { id: "e10", kind: "rule",
+      q: "A fanned ribbon agrees, and this is the first close through the call or put trigger, not yet at 1 ATR. What is it?",
+      opts: [
+        { v: "A", l: "A trigger trade. First official target is mid-range 61.8; 1 ATR is the ideal" },
+        { v: "B", l: "A Golden Gate, because any close outside the fence is a Golden Gate" },
+        { v: "C", l: "No trade — wait until 38.2 is tagged" }
+      ],
+      want: "A",
+      why: "He wants to go long or short at the trigger with confirmation and a stacked, trending ribbon (in the 2022 overview, a 10-minute retest of a fast EMA). First official target is 61.8; ideal is full range.",
+      cite: "ATR Levels Overview, 5:42–5:47, 9:40–10:14, and 6:44–6:54",
+      url: "https://www.youtube.com/watch?v=tGS2-KI1VUA&t=342s"
+    },
+    { id: "e11", kind: "rule",
+      q: "What timeframe does he default to with day-mode ATR levels?",
+      opts: [
+        { v: "A", l: "Hourly, because day-mode needs a higher frame" },
+        { v: "B", l: "A 1-minute chart, especially for Golden Gate" },
+        { v: "C", l: "10-minute with extended hours (3-minute for scalps). Anything under 30 minutes is in range" }
+      ],
+      want: "C",
+      why: "Day mode 'pairs really well with… anything under 30 minutes.' His default example is the 10-minute chart with extended hours on; for scalping he drops to 3-minute. Hourly is starting to be a stretch. He generally does not recommend 1-minute for the Golden Gate play. This drill uses 15-minute bars with the same day-mode ATR.",
+      cite: "Precision Levels, Extensions, and Modes, 7:24–7:47",
+      url: "https://www.youtube.com/watch?v=kTmQc5eZzzc&t=444s"
+    },
+    { id: "e12", kind: "rule",
+      q: "Once an ATR level is hit, about what chance does he quote of price reaching the next level?",
+      opts: [
+        { v: "A", l: "About 70%" },
+        { v: "B", l: "About 40%" },
+        { v: "C", l: "He does not quote a level-to-level number" }
+      ],
+      want: "A",
+      why: "Separately from the 60% Golden Gate figure, he cites over 70% chance that when an ATR level is hit, price reaches the next level. He uses that to stay in trades.",
+      cite: "The Golden Gate Strat, 6:44–7:07",
+      url: "https://www.youtube.com/watch?v=d43HaLb765k&t=404s"
+    },
+    { id: "e13", kind: "rule",
+      q: "The opening candle wicks above the call trigger, then drops back through it. What is his caution?",
+      opts: [
+        { v: "A", l: "Always buy that opening wick — it is the first close" },
+        { v: "B", l: "Opening candles can be dangerous; he wants confirmation, not a naked opening poke" },
+        { v: "C", l: "Treat it as a Golden Gate if 38.2 was wicked" }
+      ],
+      want: "B",
+      why: "In the entries-and-exits video he shows an open that goes above the call trigger, gets wicked off, then drops back through: 'that opening candle can be kind of dangerous.' He prefers confirmation (break-and-retest, ribbon pullback, or trigger recapture).",
+      cite: "Day Trading with ATR Levels… Entries and Exits, 10:20–10:46",
+      url: "https://www.youtube.com/watch?v=OP14Aee5au8&t=620s"
+    },
+    { id: "e14", kind: "rule",
+      q: "How does he place stops?",
+      opts: [
+        { v: "A", l: "A fixed 1% stop on every trade, wick or close" },
+        { v: "B", l: "Technical stops — trigger, previous close, or the ribbon — with 'a little room.' No universal close-only or wick-only law" },
+        { v: "C", l: "Always a 15-minute close back through 61.8" }
+      ],
+      want: "B",
+      why: "Examples: a stop at the call trigger or previous close 'depending on your risk'; an initial stop 'just above this put trigger, give myself a little room to operate'; stops at the 21 / 34 / 50 EMA. He 'absolutely hate[s]' most fixed-percentage stops unless they map back to the chart. This drill uses a 15-minute close fill as our structured futures rule, not a verbatim law from the videos.",
+      cite: "Pivot Ribbon Tutorial, 16:54–17:06; Entries and Exits, 11:13–11:23 and 17:55–18:00",
+      url: "https://www.youtube.com/watch?v=h1CStzLuRrY&t=1014s"
+    },
+    { id: "e15", kind: "rule",
+      q: "The 8, 21, and 34 are stacked and starting to fan, but price has not yet closed through the call or put trigger, and 38.2 has not been tagged. What is it?",
+      opts: [
+        { v: "A", l: "A trigger trade — a fanned ribbon is enough" },
+        { v: "B", l: "No trade yet. A clear ribbon is only step one; wait for a close through the trigger, or a Golden Gate tag and ribbon pullback" },
+        { v: "C", l: "A Golden Gate, because the ribbon is ready" }
+      ],
+      want: "B",
+      why: "He wants confirmation at the trigger, not a naked ribbon. A close still inside the fence between the call and put triggers is not a trigger trade, and Golden Gate requires the 38.2 tag first.",
+      cite: "ATR Levels Overview, 5:42–5:47; map of the fence, 12:14–12:54",
+      url: "https://www.youtube.com/watch?v=tGS2-KI1VUA&t=342s"
+    }
+  ];
+
 
   var Q1_OPTS = [
     { v: "G", l: "Green, fanned up" },
@@ -929,6 +1149,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (q === "qlook") return lookWant(s);
     if (q === "q2f") return atFullRange(s) ? "X" : "F";
     if (q === "q3") return (tagged618SinceBreak(s) ? "N" : s.q3);
+    if (q === "qnt") return l2SetupOf(s).action === "N" ? "N" : "T";
     return s.code;
   }
 
@@ -939,6 +1160,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (q === "qlook") return QLOOK_OPTS;
     if (q === "q2f") return Q2F_OPTS;
     if (q === "q3") return Q3_OPTS;
+    if (q === "qnt") return QNT_OPTS;
     return QLOOK_OPTS;
   }
 
@@ -961,6 +1183,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (q === "qlook") return "What are you looking at? A fresh break, a pullback after a break, or neither?";
     if (q === "q2f") return "Is this the first close past the trigger, or has price already reached full range (1 ATR)? Mid-range 61.8 is the first target, not 'too late.'";
     if (q === "q3") return "Golden Gate is the 38.2 level (~60% chance of reaching the 61.8 Golden FIB). After tagging 38.2, did price pull back to the ribbon and hold, with 61.8 not yet tagged? Once 61.8 has been tagged, the Golden Gate is done (stale), even if price comes back.";
+    if (q === "qnt") return "Trade or no trade?";
     return "What are you looking at?";
   }
 
@@ -972,6 +1195,8 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (q === "q1" && v === "G") return "long";
     if (q === "q1" && v === "R") return "short";
     if (q === "q1" && v === "T") return "skip";
+    if (q === "qnt" && v === "T") return "long";
+    if (q === "qnt" && v === "N") return "skip";
     return "none";
   }
 
@@ -1019,6 +1244,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (l.q === "qlook") return "fresh-pull";
     if (l.q === "q2f") return l.tag === "ex" ? "extended" : "fresh-stale";
     if (l.q === "q3") return "gg";
+    if (l.q === "qnt") return "no-trade";
     return null;
   }
 
@@ -1033,6 +1259,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (id === "side") return "q2b";
     if (id === "fresh-pull" || id === "fresh-stale") return "qlook";
     if (id === "extended") return "q2f";
+    if (id === "no-trade") return "qnt";
     return "q3";
   }
 
@@ -1050,6 +1277,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (id === "fresh-pull") return similar ? look === "B" || look === "P" : look === "N";
     if (id === "fresh-stale") return similar ? s.tag === "st" || (s.q2 === "F" && s.tag === "tr") : s.tag === "gg" || s.tag === "ex" || s.tag === "nh";
     if (id === "extended") return similar ? atFullRange(s) : !atFullRange(s) && (s.tag === "tr" || s.tag === "st" || s.tag === "ex");
+    if (id === "no-trade") return similar ? l2SetupOf(s).action === "N" : l2SetupOf(s).action !== "N";
     return similar ? s.tag === "gg" : s.tag === "nh" || s.tag === "st" || s.tag === "tr";
   }
 
@@ -1233,7 +1461,41 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     return { tagged: tagged, pulled: pulled, held: held, yes: false };
   }
 
+  function noTradeReason(s) {
+    var setup = l2SetupOf(s);
+    if (setup.action !== "N") return "This is a trade (" + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ").";
+    if (atFullRange(s) || s.tag === "ex" || setup.kind === "ex") return "too late at 1 ATR";
+    if (s.tag === "dg" || setup.kind === "dg" || s.q2 === "D") return "ribbon against";
+    if (s.q1 === "T" || setup.kind === "tw" || s.tag === "tw") return "chop/inside";
+    if (tagged618SinceBreak(s) || s.tag === "st" || s.tag === "nh" || setup.kind === "st" || setup.kind === "nh") return "stale/past 61.8";
+    if (s.tag === "in" || s.tag === "nc" || setup.kind === "in" || s.q2 === "I" || s.q2 === "W") return "no trigger break";
+    return "chop/inside";
+  }
+
   function lessonLines(s, id) {
+    if (id === "no-trade") {
+      var setup = l2SetupOf(s);
+      if (setup.action !== "N") {
+        return [
+          "This one is a trade: a " + (setup.action === "L" ? "long" : "short") + " " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ".",
+          setup.kind === "gg"
+            ? "38.2 is tagged, price pulled back to the ribbon or the trigger and held, and 61.8 has not been tagged yet."
+            : "This is the first close through the trigger, the ribbon agrees, and price is not yet at 1 ATR."
+        ];
+      }
+      var why = noTradeReason(s);
+      var detail = {
+        "no trigger break": "There is no first close through the call or put trigger, and no Golden Gate. Wait.",
+        "stale/past 61.8": "The first close already happened, and there is no usable Golden Gate. Once 61.8 has been tagged since the trigger break, the Golden Gate is done (stale), even if price comes back.",
+        "too late at 1 ATR": "The last close is already at full range (1 ATR). Too late to chase the day-mode move. Mid-range 61.8 is the first target, not 'too late.'",
+        "ribbon against": "The ribbon points the other way. Do not fade a fanned ribbon.",
+        "chop/inside": "The ribbon is twisted or flat, or price is still chopping inside the fence. Stay out."
+      };
+      return [
+        "No trade. Reason: " + why + ".",
+        detail[why] || "Stand aside."
+      ];
+    }
     if (id === "ribbon") {
       return [
         s.q1 === "G" ? "The 8 is above the 21, and the 21 is above the 34 — green, fanned up." : s.q1 === "R" ? "The 8 is below the 21, and the 21 is below the 34 — red, fanned down." : "The 8, 21, and 34 are tangled or sitting on top of each other. That is twisted or flat.",
@@ -1364,8 +1626,36 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       points: 0,
       skills: {},
       session: null,
-      l2: emptyL2()
+      l2: emptyL2(),
+      flags: [],
+      exam: emptyExam()
     };
+  }
+
+  function emptyExam() {
+    return { logs: [], best: 0, last: null, session: null };
+  }
+
+  function migrateExam(raw) {
+    var d = emptyExam();
+    if (!raw || typeof raw !== "object") return d;
+    d.logs = Array.isArray(raw.logs) ? raw.logs : [];
+    d.best = Number(raw.best) || 0;
+    d.last = raw.last && typeof raw.last === "object" ? raw.last : null;
+    d.session = raw.session && typeof raw.session === "object" ? raw.session : null;
+    return d;
+  }
+
+  function migrateFlags(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.filter(function (f) { return f && f.id; }).map(function (f) {
+      return {
+        id: String(f.id),
+        note: f.note ? String(f.note).slice(0, 500) : "",
+        view: f.view === "trade" ? "trade" : "play",
+        at: Number(f.at) || Date.now()
+      };
+    });
   }
 
   function emptyL2() {
@@ -1437,7 +1727,9 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         points: Number(p.points) || 0,
         skills: p.skills && typeof p.skills === "object" ? p.skills : {},
         session: p.session && typeof p.session === "object" ? p.session : null,
-        l2: migrateL2(p.l2)
+        l2: migrateL2(p.l2),
+        flags: migrateFlags(p.flags),
+        exam: migrateExam(p.exam)
       });
     } catch (e) {
       return emptySave();
@@ -1539,6 +1831,28 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     });
   }
 
+  function pickNoTradeSet(all, exclude, n) {
+    var blocked = {};
+    (exclude || []).forEach(function (id) { blocked[id] = true; });
+    var skips = [], takes = [];
+    all.forEach(function (s) {
+      if (blocked[s.id]) return;
+      if (l2SetupOf(s).action === "N") skips.push(s);
+      else takes.push(s);
+    });
+    var wantSkip = Math.max(1, Math.round(n * 0.75));
+    var out = sortCandidates(skips, false).slice(0, wantSkip);
+    out.forEach(function (s) { blocked[s.id] = true; });
+    var rest = sortCandidates(takes.filter(function (s) { return !blocked[s.id]; }), false);
+    for (var i = 0; i < rest.length && out.length < n; i++) out.push(rest[i]);
+    if (out.length < n) {
+      var more = sortCandidates(skips.filter(function (s) { return !blocked[s.id]; }), false);
+      for (var j = 0; j < more.length && out.length < n; j++) out.push(more[j]);
+    }
+    out.sort(function (a, b) { return ((a.tmin + 17) * 11 % 89) - ((b.tmin + 17) * 11 % 89); });
+    return out.slice(0, n);
+  }
+
   function pickCharts(all, skill, exclude, n, similarFirst, hard) {
     var blocked = {};
     (exclude || []).forEach(function (id) { blocked[id] = true; });
@@ -1629,8 +1943,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       return { skill: "fresh-pull", hard: false, speed: false, skillOnly: true, contrast: true };
     }
     /* Undersampled later skills get extra reps. */
+    var nt = skillStats(sv, "no-trade");
+    if (nt.lvl !== "mastered" && nShown && nShown % 3 === 2) {
+      return { skill: "no-trade", hard: false, speed: false, skillOnly: true };
+    }
     var thin = stats.filter(function (s) {
-      return (s.id === "fresh-stale" || s.id === "extended" || s.id === "gg") && s.n < 15;
+      return (s.id === "fresh-stale" || s.id === "extended" || s.id === "gg" || s.id === "no-trade") && s.n < 15;
     });
     if (thin.length) {
       thin.sort(function (a, b) { return a.n - b.n || a.rank - b.rank; });
@@ -1896,7 +2214,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (!ses || !Array.isArray(ses.ids) || !ses.ids.length) return false;
     var ids = ses.ids.filter(function (id) { return !!byId(ALL, id); });
     if (!ids.length) return false;
-    ui.view = ses.view === "learn" ? "learn" : "play";
+    ui.view = ses.view === "learn" || ses.view === "exam" ? ses.view : "play";
     ui.phase = ses.phase === "feedback" || ses.phase === "lesson" || ses.phase === "ask" ? ses.phase : "ask";
     ui.skill = ses.skill || chooseSkill(save).skill;
     ui.focus = ses.focus === true;
@@ -1990,10 +2308,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     ui.quiz = null;
     var exclude = [];
     if (seed) exclude.push(seed.id);
-    var n = focus ? 5 : 1;
+    var n = opts.n || (focus ? 5 : 1);
     var charts;
     if (ui.contrast || (focus && ui.skill === "fresh-pull")) {
       charts = pickLookContrast(ALL, exclude, n);
+    } else if (ui.skill === "no-trade") {
+      charts = pickNoTradeSet(ALL, exclude, n);
     } else {
       charts = pickCharts(ALL, ui.skill, exclude, n, !!focus, ui.hard);
     }
@@ -2276,6 +2596,27 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         lines.push("Common decision errors: none yet");
       }
     }
+    var ex = save.exam || emptyExam();
+    lines.push("");
+    lines.push("Saty answer key (separate from recognition)");
+    if (!(ex.logs && ex.logs.length) && !ex.last) {
+      lines.push("No exam attempts yet.");
+    } else {
+      var last = ex.last;
+      if (last && last.n) lines.push("Last exam: " + last.ok + "/" + last.n + " (" + Math.round((100 * last.ok) / last.n) + "%)");
+      if (ex.best) lines.push("Best: " + ex.best + "/" + SATY_EXAM.length);
+      lines.push("Attempts logged: " + (ex.logs ? ex.logs.length : 0) + " answers (not counted in the recognition score above).");
+    }
+    var flags = save.flags || [];
+    lines.push("");
+    if (!flags.length) {
+      lines.push("Flagged charts: none");
+    } else {
+      lines.push("Flagged charts (" + flags.length + ")");
+      flags.forEach(function (f) {
+        lines.push("• " + f.id + (f.view === "trade" ? " (Level 2)" : "") + (f.note ? " — " + f.note : ""));
+      });
+    }
     return lines.join("\n");
   }
 
@@ -2330,8 +2671,56 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       '<div class="chart">' +
         drawChart(s, shown, highlight, compact) +
         '<div class="caption">' + esc(s.name) + " · " + esc(s.when) + " · PDC " + esc(fmt(s.levels.pdc)) + " · ATR " + esc(fmt(s.levels.atr)) + "</div>" +
+        renderFlag(s.id, "play") +
       "</div>"
     );
+  }
+
+  function flagFor(id, view) {
+    var xs = save.flags || [];
+    for (var i = xs.length - 1; i >= 0; i--) {
+      if (xs[i].id === id && xs[i].view === view) return xs[i];
+    }
+    return null;
+  }
+
+  function renderFlag(id, view) {
+    if (!id) return "";
+    var f = flagFor(id, view);
+    var open = ui.flagOpen && ui.flagId === id && ui.flagView === view;
+    var html = '<div class="flag-wrap">';
+    html += '<button type="button" class="flag-btn" id="flag-open">' + (f ? "Flagged — this looks wrong" : "This looks wrong") + "</button>";
+    if (open) {
+      html += '<div class="flag-box"><label class="muted" for="flag-note">What looks wrong? (optional)</label>';
+      html += '<textarea id="flag-note" rows="3" maxlength="500" placeholder="A short note I can review">' + esc((f && f.note) || "") + "</textarea>";
+      html += '<button type="button" class="opt tone-none" id="flag-save">Save flag</button></div>';
+    } else if (f && f.note) {
+      html += '<div class="flag-saved">' + esc(f.note) + "</div>";
+    }
+    html += "</div>";
+    return html;
+  }
+
+  function openFlag(id, view) {
+    ui.flagOpen = true;
+    ui.flagId = id;
+    ui.flagView = view;
+    render();
+  }
+
+  function saveFlag(id, view, note) {
+    if (!save.flags) save.flags = [];
+    var found = -1;
+    for (var i = 0; i < save.flags.length; i++) {
+      if (save.flags[i].id === id && save.flags[i].view === view) found = i;
+    }
+    var rec = { id: id, view: view, note: (note || "").slice(0, 500), at: Date.now() };
+    if (found >= 0) save.flags[found] = rec;
+    else save.flags.push(rec);
+    ui.flagOpen = false;
+    writeSave(save);
+    setShareNote("Flagged " + id + ". It will be in Send my progress.");
+    render();
   }
 
   function renderButtons(q) {
@@ -2479,7 +2868,8 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       var copy = sortCandidates(xs, false);
       return copy.slice(0, n);
     }
-    var out = take(trades, 5).concat(take(skips, 5));
+    /* Weight toward no-trade: his top leak is taking trades on no-trade charts. */
+    var out = take(trades, 3).concat(take(skips, 7));
     if (out.length < 8) {
       var rest = sortCandidates(ALL.filter(function (s) { return !taken[s.id]; }), false);
       out = out.concat(rest);
@@ -2640,8 +3030,8 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     ses.phase = "outcome";
     ses.outcome = rec;
     ses.note = okSetup
-      ? (setup.action === "N" ? "Right to stand aside. Patience is part of the system." : "You passed. That setup was a trade.")
-      : (setup.action === "N" ? "There was no trade here." : "That was a real " + (setup.action === "L" ? "long" : "short") + " " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ". Passing missed it.");
+      ? (setup.action === "N" ? "Right to stand aside. Reason: " + noTradeReason(s) + "." : "You passed. That setup was a trade.")
+      : (setup.action === "N" ? "There was no trade here. Reason: " + noTradeReason(s) + "." : "That was a real " + (setup.action === "L" ? "long" : "short") + " " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ". Passing missed it.");
     l2Snap();
     render();
   }
@@ -2702,6 +3092,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     ses.phase = "outcome";
     ses.outcome = rec;
     ses.note = (praise ? praise + " " : "") + stopWhy;
+    if (setup.action === "N") ses.note = (ses.note ? ses.note + " " : "") + "No trade. Reason: " + noTradeReason(s) + ".";
     l2Snap();
     render();
   }
@@ -2840,7 +3231,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     }
     var hl = ses.phase === "outcome" ? "fence" : "fence";
     html += '<div class="stage">';
-    html += '<div class="chart">' + drawChart(s, shown, hl, false, overlay) + '<div class="caption">' + esc(s.name) + " · " + esc(s.when) + " · " + shown + " bars shown · $1.50 round-trip in the sim</div></div>";
+    html += '<div class="chart">' + drawChart(s, shown, hl, false, overlay) + '<div class="caption">' + esc(s.name) + " · " + esc(s.when) + " · " + shown + " bars shown · $1.50 round-trip in the sim</div>" + renderFlag(s.id, "trade") + "</div>";
 
     if (ses.phase === "replay") {
       html += '<p class="prompt">Watch the tape. No future bars are shown.</p>';
@@ -2895,12 +3286,127 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
   }
 
 
+  function examState() {
+    if (!save.exam) save.exam = emptyExam();
+    return save.exam;
+  }
+
+  function startExam(force) {
+    var E = examState();
+    if (!force && E.session && E.session.phase && E.session.phase !== "done" && Array.isArray(E.session.ids) && E.session.ids.length) {
+      ui.view = "exam";
+      writeSave(save);
+      return;
+    }
+    E.session = {
+      ids: SATY_EXAM.map(function (q) { return q.id; }),
+      index: 0,
+      phase: "ask",
+      pick: null,
+      ok: false,
+      answers: []
+    };
+    ui.view = "exam";
+    writeSave(save);
+  }
+
+  function examCurrent() {
+    var ses = examState().session;
+    if (!ses || !ses.ids) return null;
+    var id = ses.ids[ses.index];
+    for (var i = 0; i < SATY_EXAM.length; i++) if (SATY_EXAM[i].id === id) return SATY_EXAM[i];
+    return null;
+  }
+
+  function examPick(v) {
+    var E = examState();
+    var ses = E.session;
+    var q = examCurrent();
+    if (!ses || !q || ses.phase !== "ask") return;
+    ses.pick = v;
+    ses.ok = v === q.want;
+    ses.phase = "feedback";
+    ses.answers = (ses.answers || []).concat([{ id: q.id, pick: v, correct: ses.ok }]);
+    E.logs = (E.logs || []).concat([{ id: q.id, pick: v, correct: ses.ok, at: Date.now() }]);
+    writeSave(save);
+    render();
+  }
+
+  function examNext() {
+    var E = examState();
+    var ses = E.session;
+    if (!ses) return;
+    if (ses.index + 1 >= ses.ids.length) {
+      var ok = 0;
+      (ses.answers || []).forEach(function (a) { if (a.correct) ok += 1; });
+      var n = ses.ids.length;
+      E.last = { ok: ok, n: n, at: Date.now() };
+      if (ok > (E.best || 0)) E.best = ok;
+      ses.phase = "done";
+      ses.okCount = ok;
+      writeSave(save);
+      render();
+      return;
+    }
+    ses.index += 1;
+    ses.phase = "ask";
+    ses.pick = null;
+    ses.ok = false;
+    writeSave(save);
+    render();
+  }
+
+  function renderExam() {
+    var E = examState();
+    var ses = E.session;
+    var html = '<div class="exam stage">';
+    if (!ses || ses.phase === "done") {
+      html += "<h2>Saty answer key</h2>";
+      html += "<p>A short exam of rules Saty states in his videos, with timestamps and links. <strong>These are not his exact charts.</strong> We could not faithfully reproduce the Tesla, QQQ, IWM, SPY, or Apple examples he walks through from our NQ/ES pack, so every item is a cited rule question — not a relabeled drill chart pretending to be his tape.</p>";
+      html += '<p class="muted">Your exam score is tracked separately and does not change the recognition score or Level 2 P&amp;L.</p>';
+      if (E.last && E.last.n) {
+        html += '<p class="ran-cue">Last score: ' + E.last.ok + "/" + E.last.n + " (" + Math.round((100 * E.last.ok) / E.last.n) + "%)" + (E.best ? " · best " + E.best + "/" + SATY_EXAM.length : "") + "</p>";
+      }
+      html += '<button type="button" class="opt tone-long" id="exam-start">' + (E.last ? "Retake the exam" : "Start the exam") + "</button>";
+      html += '<button type="button" class="opt tone-none" id="learn-back">Back</button>';
+      html += "</div>";
+      return html;
+    }
+    var q = examCurrent();
+    if (!q) {
+      html += "<p>No question.</p><button type=\"button\" class=\"opt tone-none\" id=\"learn-back\">Back</button></div>";
+      return html;
+    }
+    html += '<p class="muted">Question ' + (ses.index + 1) + " of " + ses.ids.length + " · rule question, not one of his exact charts</p>";
+    html += '<div class="exam-badge">Rule question from Saty&rsquo;s videos — not his exact chart</div>';
+    html += '<p class="prompt">' + esc(q.q) + "</p>";
+    if (ses.phase === "ask") {
+      html += '<div class="opts" id="exam-opts">';
+      (q.opts || []).forEach(function (o) {
+        html += '<button type="button" class="opt tone-none" data-exam="' + esc(o.v) + '">' + esc(o.l) + "</button>";
+      });
+      html += "</div>";
+    } else {
+      var wantL = "";
+      (q.opts || []).forEach(function (o) { if (o.v === q.want) wantL = o.l; });
+      html += '<div class="verdict ' + (ses.ok ? "ok" : "bad") + '">' + (ses.ok ? "Yes — " : "Not quite. The answer is ") + esc(wantL) + (ses.ok ? "" : ".") + "</div>";
+      html += "<p>" + esc(q.why) + "</p>";
+      html += '<p class="cite">Source: <a href="' + esc(q.url) + '" target="_blank" rel="noopener">' + esc(q.cite) + "</a></p>";
+      html += '<button type="button" class="opt tone-none" id="exam-next">' + (ses.index + 1 >= ses.ids.length ? "See my score" : "Next") + "</button>";
+    }
+    html += '<button type="button" class="learn-link" id="learn-back" style="margin-top:12px">Leave exam</button>';
+    html += "</div>";
+    return html;
+  }
+
   function renderLearn() {
     var tr = ALL.filter(function (s) { return s.tag === "tr" && s.q1 === "G"; })[0];
     var gg = ALL.filter(function (s) { return s.tag === "gg" && s.q1 === "G"; })[0];
     var st = ALL.filter(function (s) { return s.tag === "st"; })[0];
     var ex = ALL.filter(function (s) { return s.tag === "ex"; })[0];
     var html = '<div class="learn">';
+    html += '<button type="button" class="opt tone-long" id="btn-notrade">Trade or no trade?</button>';
+    html += '<button type="button" class="opt tone-none" id="btn-exam">Saty answer key</button>';
     html += "<h2>The checklist</h2>";
     html += "<ol class='rules'>";
     html += "<li><strong>Ribbon.</strong> 8 / 21 / 34, green and fanned up or red and fanned down. Twisted or flat means stay out. Do not fade a fanned ribbon.</li>";
@@ -2950,6 +3456,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         '<div class="top-links">' +
           '<button type="button" class="learn-link" id="btn-learn">Learn</button>' +
           '<button type="button" class="learn-link" id="btn-trade">Trade it</button>' +
+          '<button type="button" class="learn-link" id="btn-exam">Answer key</button>' +
           '<button type="button" class="learn-link" id="btn-share">Send my progress</button>' +
         "</div>" +
       "</header>" +
@@ -2958,6 +3465,8 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         ? "Level 2 · Trade it"
         : ui.view === "learn"
           ? "The rules, in order"
+          : ui.view === "exam"
+            ? "Saty answer key · scored separately"
           : ("You\'re working on: " + esc(skillLabel(skill)) + " · " + esc(meter) +
             (ui.focus ? " · focus " + ui.setLogs.filter(function (c) { return c.allOk; }).length + "/" + ui.setLogs.length : "") +
             (ui.speed && ui.phase === "ask" ? ' · <span class="timer' + (ui.speedLeft && ui.speedLeft <= 3 ? " warn" : "") + '" id="timer">' + (ui.speedLeft || 8) + "s</span>" : ""))) +
@@ -2971,6 +3480,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
 
     if (ui.view === "learn") {
       root.innerHTML = header + renderLearn();
+      bind();
+      return;
+    }
+
+    if (ui.view === "exam") {
+      root.innerHTML = header + renderExam();
       bind();
       return;
     }
@@ -3072,12 +3587,51 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       l2StartSession(false);
       render();
     };
+    hook("btn-exam", function () {
+      clearAuto();
+      clearSpeed();
+      clearL2Timer();
+      if (save.l2) save.l2.resume = false;
+      startExam(false);
+      render();
+    });
+    hook("btn-notrade", function () {
+      clearAuto();
+      clearSpeed();
+      clearL2Timer();
+      if (save.l2) save.l2.resume = false;
+      startPlay(true, "no-trade", null, { skillOnly: true, n: 8 });
+      render();
+    });
+    hook("exam-start", function () { startExam(true); render(); });
+    hook("exam-next", function () { examNext(); });
+    var examOpts = el("exam-opts");
+    if (examOpts) {
+      var ebtns = examOpts.querySelectorAll("button[data-exam]");
+      for (var ei = 0; ei < ebtns.length; ei++) {
+        ebtns[ei].onclick = (function (v) { return function () { examPick(v); }; })(ebtns[ei].getAttribute("data-exam"));
+      }
+    }
     var back = el("learn-back");
     if (back) back.onclick = function () {
       ui.view = "play";
       snapshot();
       render();
     };
+    hook("flag-open", function () {
+      if (ui.view === "trade") {
+        var cur = l2Current();
+        if (cur) openFlag(cur.id, "trade");
+      } else {
+        var sflg = current();
+        if (sflg) openFlag(sflg.id, "play");
+      }
+    });
+    hook("flag-save", function () {
+      var area = el("flag-note");
+      var note = area ? area.value : "";
+      saveFlag(ui.flagId, ui.flagView, note);
+    });
     var opts = el("opts");
     if (opts) {
       var btns = opts.querySelectorAll("button[data-v]");
@@ -3150,6 +3704,15 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     l2Continue: l2AfterOutcome,
     l2Setup: function () { var s = l2Current(); return s ? l2SetupOf(s) : null; },
     l2Current: l2Current,
+    noTradeReason: function () { var s = current() || l2Current(); return s ? noTradeReason(s) : null; },
+    l2ReasonOf: noTradeReason,
+    flags: function () { return save.flags || []; },
+    exam: function () { return save.exam; },
+    startExam: function (force) { startExam(!!force); render(); },
+    examPick: examPick,
+    examNext: examNext,
+    SATY_EXAM: SATY_EXAM,
+    startNoTrade: function () { startPlay(true, "no-trade", null, { skillOnly: true, n: 8 }); render(); },
     step: function (v) {
       onPick(v);
       clearAuto();
