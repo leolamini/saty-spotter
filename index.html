@@ -2065,7 +2065,8 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       flags: [],
       exam: emptyExam(),
       aside: emptyAside(),
-      replay: emptyReplay()
+      replay: emptyReplay(),
+      manage: emptyManage()
     };
   }
 
@@ -2168,7 +2169,8 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
         flags: migrateFlags(p.flags),
         exam: migrateExam(p.exam),
         aside: migrateAside(p.aside),
-        replay: migrateReplay(p.replay)
+        replay: migrateReplay(p.replay),
+        manage: migrateManage(p.manage)
       });
     } catch (e) {
       return emptySave();
@@ -3485,6 +3487,16 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       lines.push("Days finished: " + RP.finished + "  ·  on-time entries " + RP.onTime + "  ·  missed setups " + RP.missed + "  ·  false takes " + RP.falseTakes);
       if (RP.waitsN) lines.push("Wait accuracy on no-trade bars: " + pct(RP.waitsOk, RP.waitsN) + " (" + RP.waitsOk + "/" + RP.waitsN + ")");
     }
+    var MG = save.manage || emptyManage();
+    lines.push("");
+    lines.push("Trade management");
+    if (!MG.n) {
+      lines.push("No management drills yet.");
+    } else {
+      lines.push("Charts: " + MG.n + "  ·  official target " + pct(MG.scaleOk, MG.scaleN) + " (" + MG.scaleOk + "/" + MG.scaleN + ")  ·  taught stop " + pct(MG.stopOk, MG.stopN) + " (" + MG.stopOk + "/" + MG.stopN + ")  ·  runner plan " + pct(MG.runnerOk, MG.runnerN) + " (" + MG.runnerOk + "/" + MG.runnerN + ")");
+      if (MG.pdc) lines.push("Wider previous-close stops accepted: " + MG.pdc);
+      if (MG.flat) lines.push("Flattened at 61.8 (acceptable, not the runner plan): " + MG.flat);
+    }
     var ex = save.exam || emptyExam();
     lines.push("");
     lines.push("Saty answer key (separate from recognition)");
@@ -3548,6 +3560,250 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     } catch (e3) {}
     fallbackTextarea();
   }
+
+  /* ---------- Trade-management drill ---------- */
+  var MANAGE_STEPS = ["scale", "stop", "runner"];
+
+  function manageScaleOpts() {
+    return [
+      { v: "382", l: "Scale at 38.2 — that is the official first target" },
+      { v: "official", l: "38.2 can be a first scale; the official first target is mid-range 61.8 (he also scales at 50)" },
+      { v: "all100", l: "Hold everything until 1 ATR and take it all there" }
+    ];
+  }
+
+  function manageStopOpts(kind) {
+    var taught = kind === "gg"
+      ? "A close back beyond the 8 (the ribbon you used) — first taught stop on a Golden Gate"
+      : "A close back inside the trigger — first taught stop on a trigger entry";
+    return [
+      { v: "taught", l: taught },
+      { v: "pdc", l: "Previous close — a valid wider pivot stop when you need a little room" },
+      { v: "atr", l: "A fixed 1 ATR stop, away from the chart" }
+    ];
+  }
+
+  function manageRunnerOpts() {
+    return [
+      { v: "runner", l: "Take 61.8, and optionally leave a runner for 1 ATR (the ideal day target)" },
+      { v: "flat618", l: "Exit the whole trade at 61.8" },
+      { v: "hold100", l: "Skip 61.8 and hold everything to 1 ATR" }
+    ];
+  }
+
+  function manageOpts(step, kind) {
+    if (step === "scale") return manageScaleOpts();
+    if (step === "stop") return manageStopOpts(kind);
+    return manageRunnerOpts();
+  }
+
+  function manageScoreOf(step, got) {
+    if (step === "scale") return got === "official" ? 1 : 0;
+    if (step === "stop") return got === "taught" ? 1 : got === "pdc" ? 0.5 : 0;
+    if (step === "runner") return got === "runner" ? 1 : got === "flat618" ? 0.5 : 0;
+    return 0;
+  }
+
+  function managePrompt(step) {
+    if (step === "scale") return "Price is at or near 38.2. What is the first official profit target?";
+    if (step === "stop") return "Where does the first taught stop go?";
+    return "After mid-range 61.8, what do you do with the rest?";
+  }
+
+  function manageWhy(step, got) {
+    if (step === "scale") {
+      if (got === "official") return "Yes. 38.2 can be a first scale, especially on a trigger that already tagged it, but it is not the official first target. Mid-range 61.8 is. He also scales at 50. 1 ATR is the ideal runner, not the only exit.";
+      if (got === "382") return "38.2 can be a first scale, but it is not the official first target. Mid-range 61.8 is. He also scales at 50 on a Golden Gate.";
+      return "He scales at mid-range (and often at 50). Holding everything to 1 ATR skips the official first target. 1 ATR is the ideal runner after you have already taken some off.";
+    }
+    if (step === "stop") {
+      if (got === "taught") return "Yes. Taught first stop: a close back inside the trigger on a trigger entry, or a close back beyond the 8 on a Golden Gate. Previous close is a valid wider pivot when you need a little room — not the first taught choice.";
+      if (got === "pdc") return "Previous close is a valid wider pivot stop when the tight stop is too close to entry. It is acceptable, but it is not the first taught choice. Taught first: trigger on a first-close entry, the 8 on a Golden Gate.";
+      return "He uses technical stops that map to the chart (trigger, previous close, or the ribbon) with a little room. He has said he hates most fixed-percentage or fixed-range stops unless they map back to something on the chart.";
+    }
+    if (got === "runner") return "Yes. Take 61.8 (the official first target), and optionally leave a runner for 1 ATR, the ideal day target. On a Golden Gate he also scales at 50.";
+    if (got === "flat618") return "Exiting all at 61.8 is a reasonable hold target, especially in a swing context. The taught day plan is to take 61.8 and optionally leave a runner for 1 ATR.";
+    return "Skipping 61.8 and holding everything to 1 ATR misses the official first target. He scales at mid-range (and often at 50) and can leave a runner for the ideal 1 ATR.";
+  }
+
+  function emptyManage() {
+    return { n: 0, scaleOk: 0, scaleN: 0, stopOk: 0, stopN: 0, runnerOk: 0, runnerN: 0, pdc: 0, flat: 0, logs: [], session: null };
+  }
+
+  function migrateManage(raw) {
+    var d = emptyManage();
+    if (!raw || typeof raw !== "object") return d;
+    d.n = Number(raw.n) || 0;
+    d.scaleOk = Number(raw.scaleOk) || 0;
+    d.scaleN = Number(raw.scaleN) || 0;
+    d.stopOk = Number(raw.stopOk) || 0;
+    d.stopN = Number(raw.stopN) || 0;
+    d.runnerOk = Number(raw.runnerOk) || 0;
+    d.runnerN = Number(raw.runnerN) || 0;
+    d.pdc = Number(raw.pdc) || 0;
+    d.flat = Number(raw.flat) || 0;
+    d.logs = Array.isArray(raw.logs) ? raw.logs : [];
+    d.session = raw.session && typeof raw.session === "object" ? raw.session : null;
+    return d;
+  }
+
+  function manageState() {
+    if (!save.manage) save.manage = emptyManage();
+    return save.manage;
+  }
+
+  function managePool() {
+    return ALL.filter(function (s) {
+      var setup = l2SetupOf(s);
+      return setup.action === "L" || setup.action === "S";
+    });
+  }
+
+  function manageStart(force) {
+    var M = manageState();
+    if (!force && M.session && M.session.phase && M.session.phase !== "done") {
+      ui.view = "manage";
+      return;
+    }
+    var pool = managePool();
+    if (!pool.length) return;
+    var seen = {};
+    (M.logs || []).slice(-60).forEach(function (l) { if (l && l.id) seen[l.id] = true; });
+    var fresh = pool.filter(function (s) { return !seen[s.id]; });
+    var src = fresh.length ? fresh : pool;
+    var pick = src[Math.floor(Math.random() * src.length)];
+    var setup = l2SetupOf(pick);
+    M.session = {
+      id: pick.id,
+      phase: "scale",
+      setup: setup.action,
+      kind: setup.kind,
+      answers: {},
+      scores: {}
+    };
+    ui.view = "manage";
+    writeSave(save);
+  }
+
+  function manageCurrent() {
+    var ses = manageState().session;
+    return ses ? byId(ALL, ses.id) : null;
+  }
+
+  function recordManage(ses) {
+    var M = manageState();
+    M.n += 1;
+    if (ses.scores.scale != null) {
+      M.scaleN += 1;
+      if (ses.scores.scale === 1) M.scaleOk += 1;
+    }
+    if (ses.scores.stop != null) {
+      M.stopN += 1;
+      if (ses.scores.stop === 1) M.stopOk += 1;
+    }
+    if (ses.scores.runner != null) {
+      M.runnerN += 1;
+      if (ses.scores.runner === 1) M.runnerOk += 1;
+    }
+    if (ses.answers.stop === "pdc") M.pdc += 1;
+    if (ses.answers.runner === "flat618") M.flat += 1;
+    M.logs = (M.logs || []).concat([{
+      id: ses.id,
+      kind: ses.kind,
+      setup: ses.setup,
+      answers: ses.answers,
+      scores: ses.scores,
+      at: Date.now()
+    }]);
+  }
+
+  function manageAnswer(v) {
+    var M = manageState();
+    var ses = M.session;
+    if (!ses || !ses.phase || ses.phase === "done" || ses.phase === "review") return;
+    var step = ses.phase;
+    ses.answers[step] = v;
+    ses.scores[step] = manageScoreOf(step, v);
+    var i = MANAGE_STEPS.indexOf(step);
+    if (i < MANAGE_STEPS.length - 1) ses.phase = MANAGE_STEPS[i + 1];
+    else {
+      ses.phase = "review";
+      recordManage(ses);
+    }
+    writeSave(save);
+    render();
+  }
+
+  function manageNext() {
+    manageStart(true);
+    render();
+  }
+
+  function manageLeave() {
+    var M = manageState();
+    if (M.session && M.session.phase === "review") M.session = null;
+    ui.view = "play";
+    writeSave(save);
+    render();
+  }
+
+  function renderManage() {
+    var M = manageState();
+    var ses = M.session;
+    var html = "";
+    if (!ses || !ses.id) {
+      html += '<div class="stage">';
+      html += "<h2>Manage the trade</h2>";
+      html += '<p class="prompt">You are already in a labeled trigger or Golden Gate. Decide the scale at 38.2, the first stop, and whether a runner holds past 61.8. Scored against Saty\'s written plan, not against what the next bars did.</p>';
+      html += '<p class="muted">Taught plan: 38.2 can be a first scale; official first target is mid-range 61.8 (he also scales at 50). First stop is the trigger on a first-close entry, the 8 on a Golden Gate; previous close is a valid wider pivot. Take 61.8 and optionally leave a runner for 1 ATR.</p>';
+      if (M.n) {
+        html += '<p class="ran-cue">Official target ' + M.scaleOk + "/" + M.scaleN + " · taught stop " + M.stopOk + "/" + M.stopN + " · runner plan " + M.runnerOk + "/" + M.runnerN;
+        if (M.pdc) html += " · " + M.pdc + " wider PDC stops";
+        if (M.flat) html += " · " + M.flat + " flattened at 61.8";
+        html += "</p>";
+      }
+      html += '<button type="button" class="opt tone-long" id="mg-start">Start a chart</button>';
+      html += '<button type="button" class="opt tone-none" id="mg-back">Back to spotting</button>';
+      html += "</div>";
+      return html;
+    }
+    var s = manageCurrent();
+    if (!s) {
+      html += '<div class="stage"><p>No chart.</p><button type="button" class="opt tone-none" id="mg-back">Back</button></div>';
+      return html;
+    }
+    var kindName = ses.kind === "gg" ? "Golden Gate" : "trigger";
+    var sideName = ses.setup === "S" ? "short" : "long";
+    html += '<div class="stage">';
+    html += '<div class="chart">' + drawChart(s, N_VIS, "look", false) + '<div class="caption">' + esc(s.name) + " · " + esc(s.when) + " · entered " + esc(sideName) + " " + esc(kindName) + "</div>" + renderFlag(s.id, "play") + "</div>";
+    if (ses.phase === "review") {
+      html += "<h2>How you managed it</h2>";
+      MANAGE_STEPS.forEach(function (step) {
+        var got = ses.answers[step];
+        var score = ses.scores[step];
+        var label = "";
+        manageOpts(step, ses.kind).forEach(function (o) { if (o.v === got) label = o.l; });
+        var cls = score === 1 ? "ok" : score > 0 ? "ok" : "bad";
+        var mark = score === 1 ? "Yes — " : score > 0 ? "Acceptable — " : "Not the taught plan. ";
+        html += '<div class="verdict ' + cls + '">' + mark + esc(label) + "</div>";
+        html += "<p>" + esc(manageWhy(step, got)) + "</p>";
+      });
+      html += '<p class="cite">Sources: ATR overview 6:44–6:54 and 10:29–10:44; Golden Gate 9:43–9:50; entries/exits 17:55–18:00; system episode 18:03.</p>';
+      html += '<button type="button" class="opt tone-long" id="mg-start">Next chart</button>';
+      html += '<button type="button" class="opt tone-none" id="mg-back">Back to spotting</button>';
+    } else {
+      html += '<p class="prompt">' + esc(managePrompt(ses.phase)) + "</p>";
+      html += '<div class="opts" id="mg-opts">';
+      manageOpts(ses.phase, ses.kind).forEach(function (o) {
+        html += '<button type="button" class="opt tone-none" data-manage="' + esc(o.v) + '">' + esc(o.l) + "</button>";
+      });
+      html += "</div>";
+      html += '<button type="button" class="learn-link" id="mg-back" style="margin-top:12px">Leave drill</button>';
+    }
+    html += "</div>";
+    return html;
+  }
+
 
   /* ---------- render ---------- */
   function el(id) { return document.getElementById(id); }
@@ -4133,6 +4389,7 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       html += '<p class="muted">Stops fill when a 15-minute bar closes through them, not on a wick (our structured futures fill rule; Saty also uses ribbon and previous-close stops with a little room). First official target is mid-range 61.8 for both a trigger and a Golden Gate; 38.2 is a first scale, 1 ATR is the ideal runner. Earlier practice P&amp;L used wick fills and a 38.2 trigger target; new trades use closes and 61.8.</p>';
       html += '<p class="ran-cue">Practice P&amp;L: ' + esc(fmtR(L.rSum)) + " · " + esc(fmtUsd(L.rSum * L2_PLAN_R)) + " at $20/R (1 MNQ, $1.50 costs) · process " + l2ProcessPct(L) + "%</p>";
       html += '<button type="button" class="opt tone-long" id="l2-start">Start a session</button>';
+      html += '<button type="button" class="opt tone-none" id="btn-manage">Manage the trade</button>';
       html += '<button type="button" class="opt tone-none" id="l2-back">Back to spotting</button>';
       html += "</div>";
       return html;
@@ -4357,6 +4614,7 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     var ex = ALL.filter(function (s) { return s.tag === "ex"; })[0];
     var html = '<div class="learn">';
     html += '<button type="button" class="opt tone-long" id="btn-notrade">Trade or no trade?</button>';
+    html += '<button type="button" class="opt tone-none" id="btn-manage">Manage the trade</button>';
     html += '<button type="button" class="opt tone-none" id="btn-exam">Saty answer key</button>';
     html += "<h2>The checklist</h2>";
     html += "<ol class='rules'>";
@@ -4417,6 +4675,8 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
         ? "Level 2 · Trade it"
         : ui.view === "replay"
         ? "Day replay · full regular session"
+        : ui.view === "manage"
+        ? "Manage the trade · scale, stop, runner"
         : ui.view === "learn"
           ? "The rules, in order"
           : ui.view === "exam"
@@ -4440,6 +4700,12 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
 
     if (ui.view === "learn") {
       root.innerHTML = header + renderLearn();
+      bind();
+      return;
+    }
+
+    if (ui.view === "manage") {
+      root.innerHTML = header + renderManage();
       bind();
       return;
     }
@@ -4589,6 +4855,20 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       startPlay(true, "no-trade", null, { skillOnly: true, n: 8 });
       render();
     });
+    hook("btn-manage", function () {
+      clearAuto();
+      clearSpeed();
+      clearL2Timer();
+      if (save.l2) save.l2.resume = false;
+      manageStart(false);
+      render();
+    });
+    hook("mg-start", function () { manageStart(true); render(); });
+    hook("mg-back", function () { manageLeave(); });
+    var mgbtns = document.querySelectorAll("[data-manage]");
+    for (var mi = 0; mi < mgbtns.length; mi++) {
+      mgbtns[mi].onclick = (function (v) { return function () { manageAnswer(v); }; })(mgbtns[mi].getAttribute("data-manage"));
+    }
     hook("exam-start", function () { startExam(true); render(); });
     hook("exam-next", function () { examNext(); });
     var examOpts = el("exam-opts");
@@ -4742,6 +5022,21 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     examNext: examNext,
     SATY_EXAM: SATY_EXAM,
     startNoTrade: function () { startPlay(true, "no-trade", null, { skillOnly: true, n: 8 }); render(); },
+    manageState: manageState,
+    manageStart: function (force) { manageStart(!!force); render(); },
+    manageOpen: function (id) {
+      var s = byId(ALL, id);
+      if (!s) return;
+      var setup = l2SetupOf(s);
+      manageState().session = { id: id, phase: "scale", setup: setup.action, kind: setup.kind, answers: {}, scores: {} };
+      ui.view = "manage";
+      writeSave(save);
+      render();
+    },
+    manageAnswer: manageAnswer,
+    manageCurrent: manageCurrent,
+    managePool: managePool,
+    manageScoreOf: manageScoreOf,
     step: function (v) {
       onPick(v);
       clearAuto();
