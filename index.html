@@ -1185,7 +1185,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (q === "q2b") return "If it closed outside, was it out the side the ribbon points?";
     if (q === "qlook") return "What are you looking at? A fresh break, a pullback after a break, or neither?";
     if (q === "q2f") return "Is this the first close past the trigger, or has price already reached full range (1 ATR)? Mid-range 61.8 is the first target, not 'too late.'";
-    if (q === "q3") return "Golden Gate is the 38.2 level (~60% chance of reaching the 61.8 Golden FIB). After tagging 38.2, did price pull back to the ribbon and hold, with 61.8 not yet tagged? Once 61.8 has been tagged, the Golden Gate is done (stale), even if price comes back.";
+    if (q === "q3") return "Golden Gate is the 38.2 level (~60% chance of reaching the 61.8 Golden FIB). After tagging 38.2, did price pull back to the ribbon or recapture the trigger and hold, with 61.8 not yet tagged? Once 61.8 has been tagged, the Golden Gate is done (stale), even if price comes back.";
     if (q === "qnt") return "Trade or no trade?";
     return "What are you looking at?";
   }
@@ -1357,11 +1357,45 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     return last;
   }
 
-  function lookMarks(s) {
+  var TOUCH_PAD = 0.5; /* two ticks: packed 15-min wicks often die a tick shy of the 8 */
+
+  function ribbonHi(b) { return Math.max(b.e8, b.e21, b.e34); }
+  function ribbonLo(b) { return Math.min(b.e8, b.e21, b.e34); }
+
+  function pullKindOnBar(b, lv, side) {
+    if (!b || !lv || !side) return null;
+    if (side === "long") {
+      if (b.l <= b.e8 + TOUCH_PAD) return "8";
+      if (b.l <= ribbonHi(b) + TOUCH_PAD) return "ribbon";
+      if (b.l <= lv.pTrig + TOUCH_PAD) return "trigger";
+    } else if (side === "short") {
+      if (b.h >= b.e8 - TOUCH_PAD) return "8";
+      if (b.h >= ribbonLo(b) - TOUCH_PAD) return "ribbon";
+      if (b.h >= lv.mTrig - TOUCH_PAD) return "trigger";
+    }
+    return null;
+  }
+
+  function impulseSpan(b, lv, side) {
+    /* The 38.2-tag bar that also spans the trigger and finishes at the 38.2 end is the impulse, not a pullback. */
+    if (!b || !lv || !side) return false;
+    if (side === "long") {
+      var reached = b.l <= ribbonHi(b) + TOUCH_PAD || b.l <= lv.pTrig + TOUCH_PAD;
+      return (b.h >= lv.p382 && reached) && b.c >= (b.h + b.l) / 2;
+    }
+    var reachedS = b.h >= ribbonLo(b) - TOUCH_PAD || b.h >= lv.mTrig - TOUCH_PAD;
+    return (b.l <= lv.m382 && reachedS) && b.c <= (b.h + b.l) / 2;
+  }
+
+  function miss8OnBar(b, side) {
+    if (!b || !side) return null;
+    return side === "short" ? (b.e8 - b.h) : (b.l - b.e8);
+  }
+
+  function breakAndTag(s) {
     var side = ribbonSide(s);
     var br = (typeof s.fc === "number" && s.fc >= 0 && s.fc < N_VIS) ? s.fc : currentCross(s, side);
     var tag = (typeof s.tg === "number" && s.tg >= 0 && s.tg < N_VIS) ? s.tg : null;
-    var pull = null;
     var lv = s.levels;
     var bars = s.bars;
     if (side && br != null && tag == null) {
@@ -1372,16 +1406,53 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         if (side === "short" && bars[t].l <= lvl382) { tag = t; break; }
       }
     }
-    var after = tag != null ? tag : br;
-    if (side && after != null) {
+    return { side: side, br: br, tag: tag };
+  }
+
+  function pullEvent(s) {
+    /* First 38.2 pullback to the 8 / ribbon, or recapture of the call/put trigger. */
+    var loc = breakAndTag(s);
+    var side = loc.side, br = loc.br, tag = loc.tag;
+    var lv = s.levels, bars = s.bars, last = bars[N_VIS - 1];
+    var pull = null, kind = null;
+    if (side && tag != null && br != null) {
+      var begin = Math.max(br + 1, tag);
       var p;
-      for (p = after + 1; p < N_VIS; p++) {
-        var b = bars[p];
-        if (side === "long" && b.l <= b.e8 + 0.25) { pull = p; break; }
-        if (side === "short" && b.h >= b.e8 - 0.25) { pull = p; break; }
+      for (p = begin; p < N_VIS; p++) {
+        var k = pullKindOnBar(bars[p], lv, side);
+        if (!k) continue;
+        if (p === tag && impulseSpan(bars[p], lv, side)) continue;
+        pull = p;
+        kind = k;
+        break;
       }
     }
-    return { br: br, tag: tag, pull: pull, now: N_VIS - 1 };
+    var trig = side === "short" ? lv.mTrig : lv.pTrig;
+    var held = false;
+    if (side === "short") held = last.c <= trig && last.c <= last.e8 + 0.25;
+    else if (side === "long") held = last.c >= trig && last.c >= last.e8 - 0.25;
+    var pb = pull != null ? bars[pull] : last;
+    return {
+      side: side, br: br, tag: tag, pull: pull, kind: kind,
+      pulled: pull != null, held: held, tagged: tag != null,
+      miss8: miss8OnBar(pb, side), now: N_VIS - 1
+    };
+  }
+
+  function pullCaption(ev) {
+    if (!ev || !ev.kind) return "pull";
+    if (ev.kind === "trigger") {
+      var name = ev.side === "short" ? "put trigger" : "call trigger";
+      if (ev.miss8 != null && ev.miss8 > 0.01) return name + " · 8 is " + fmtPts(ev.miss8) + " " + (ev.side === "short" ? "above" : "below");
+      return name;
+    }
+    if (ev.kind === "ribbon") return "ribbon";
+    return "8 EMA";
+  }
+
+  function lookMarks(s) {
+    var ev = pullEvent(s);
+    return { br: ev.br, tag: ev.tag, pull: ev.pull, now: ev.now, kind: ev.kind, miss8: ev.miss8, side: ev.side };
   }
 
   function lookRanInfo(s) {
@@ -1455,25 +1526,18 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
   ];
 
   function ggChecks(s) {
-    var marks = lookMarks(s);
-    var side = ribbonSide(s);
-    var last = s.bars[N_VIS - 1];
-    var lv = s.levels;
-    var trig = side === "short" ? lv.mTrig : lv.pTrig;
-    var tagged = marks.tag != null;
-    var pulled = marks.pull != null;
-    if (!pulled && tagged) {
-      var b = last;
-      if (side === "long" && b.l <= b.e8 + 0.25) pulled = true;
-      if (side === "short" && b.h >= b.e8 - 0.25) pulled = true;
-    }
-    var held = side === "short"
-      ? (last.c <= trig && last.c <= last.e8 + 0.25)
-      : (last.c >= trig && last.c >= last.e8 - 0.25);
+    var ev = pullEvent(s);
     var yes = s.q3 === "Y";
-    /* A labeled YES is shown with all three checks ticked — that is the taught truth. */
-    if (yes) return { tagged: true, pulled: true, held: true, yes: true };
-    return { tagged: tagged, pulled: pulled, held: held, yes: false };
+    /* A labeled YES is shown with all three checks ticked — that is the taught truth. The pull kind is still the one on the chart (8, ribbon, or trigger recapture). */
+    if (yes) return { tagged: true, pulled: true, held: true, yes: true, kind: ev.kind, miss8: ev.miss8, side: ev.side };
+    return { tagged: ev.tagged, pulled: ev.pulled, held: ev.held, yes: false, kind: ev.kind, miss8: ev.miss8, side: ev.side };
+  }
+
+  function pullCheckLabel(chk) {
+    if (chk && chk.kind === "trigger") return "Recaptured the " + (chk.side === "short" ? "put" : "call") + " trigger";
+    if (chk && chk.kind === "ribbon") return "Pulled back to the ribbon";
+    if (chk && chk.pulled) return "Pulled back to the 8 EMA";
+    return "Pulled back to the ribbon or recaptured the trigger";
   }
 
   function barWhen(s, j) {
@@ -1595,6 +1659,35 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     return "No trade. Reason: " + why + ".";
   }
 
+  function showTeachMarks(highlight, trade) {
+    if (highlight === "look" || highlight === "gate") return true;
+    if (trade) return true;
+    try {
+      if (ui && ui.view === "trade") {
+        var L = save && save.l2 && save.l2.session;
+        if (L && L.phase === "outcome") return true;
+      }
+      if (ui && (ui.phase === "feedback" || ui.phase === "lesson")) return true;
+    } catch (e0) {}
+    return false;
+  }
+
+  function pullMarks(s) {
+    /* 8 / trigger-recapture markers on Golden Gate (and failed-hold) charts. */
+    var ev = pullEvent(s);
+    if (!ev || ev.pull == null || !ev.kind) return [];
+    var b = s.bars[ev.pull];
+    var cap = pullCaption(ev);
+    var out = [];
+    if (ev.kind === "trigger") {
+      out.push({ i: ev.pull, kind: "trig", px: ev.side === "short" ? b.h : b.l, caption: cap, color: "#d29922" });
+      out.push({ i: ev.pull, kind: "e8", px: b.e8, caption: null, color: "#56d364" });
+    } else {
+      out.push({ i: ev.pull, kind: "e8", px: b.e8, caption: cap, color: "#d29922" });
+    }
+    return out;
+  }
+
   function noTradeMarks(s) {
     /* Markers for the specific no-trade reason, in the same spirit as the 61.8 wick/tag circle. */
     var setup = l2SetupOf(s);
@@ -1680,7 +1773,22 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       bits.push("This is a first close through the " + (side === "short" ? "put" : "call") + " trigger, and the ribbon is stacked " + (side === "short" ? "red (8 below 21 below 34)" : "green (8 above 21 above 34)") + ".");
       if (tagged382) bits.push("This bar already tagged 38.2 (a first scale). That does not make the trade too late.");
     } else {
-      bits.push("This is a Golden Gate: 38.2 is tagged, price pulled back to the ribbon or the trigger and held, and 61.8 has not been tagged since this break.");
+      var ev = pullEvent(s);
+      var pullBit;
+      if (ev.kind === "trigger") {
+        pullBit = "price recaptured the " + (side === "short" ? "put" : "call") + " trigger";
+        if (ev.miss8 != null && ev.miss8 > 0.01) {
+          pullBit += " (the " + (side === "short" ? "high" : "low") + " missed the 8 by " + fmtPts(ev.miss8) + " points — a trigger recapture still counts)";
+        }
+        pullBit += " and the close held, and 61.8 has not been tagged since this break.";
+      } else if (ev.kind === "8") {
+        pullBit = "price pulled back to the 8 EMA and held, and 61.8 has not been tagged since this break.";
+      } else if (ev.kind === "ribbon") {
+        pullBit = "price pulled back to the ribbon and held, and 61.8 has not been tagged since this break.";
+      } else {
+        pullBit = "price pulled back to the ribbon or the trigger and held, and 61.8 has not been tagged since this break.";
+      }
+      bits.push("This is a Golden Gate: 38.2 is tagged, " + pullBit);
     }
     bits.push("Too late is only when the last close is already at 1 ATR (full range). Mid-range 61.8 is the first official target, still " + fmtPts(closeRoom618) + " points from this close" + (extRoom618 < closeRoom618 - 0.01 ? (" (the extreme was " + fmtPts(extRoom618) + " points short)") : "") + ". Full range is " + fmtPts(closeRoom100) + " points away — yes, a day-mode move can still go that far.");
     bits.push("The 8-to-34 fan is " + fan.toFixed(2) + " ATR. A stacked, fanned ribbon is the momentum condition; a short pause in the 8 does not cancel it.");
@@ -1741,7 +1849,9 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       tagged618SinceBreak(s)
         ? "61.8 has already been tagged since the trigger break. Once that happens, the Golden Gate is done (stale), even if price comes back. No new GG entry."
         : s.q3 === "Y"
-        ? "Golden Gate is the 38.2 level. Once tagged, there is about a 60% chance of reaching 61.8, and 61.8 has not been tagged yet. This one also has a ribbon pullback with trend — a typical entry."
+        ? (pullEvent(s).kind === "trigger"
+          ? "Golden Gate is the 38.2 level. Once tagged, there is about a 60% chance of reaching 61.8, and 61.8 has not been tagged yet. The pull here is a recapture of the " + (ribbonSide(s) === "short" ? "put" : "call") + " trigger, not a wick of the 8 — a trigger recapture still counts, and the close held."
+          : "Golden Gate is the 38.2 level. Once tagged, there is about a 60% chance of reaching 61.8, and 61.8 has not been tagged yet. This one also has a ribbon pullback with trend — a typical entry.")
         : s.tag === "nh"
           ? "It tagged the Golden Gate (38.2), but it did not hold the ribbon. That is not a usable GG entry."
           : "The Golden Gate is 38.2. A typical entry is a pullback to the ribbon (8 / 21 / 34) with clear trend, targeting the 61.8 Golden FIB — and only if 61.8 has not already been tagged.",
@@ -2225,6 +2335,15 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       hi = Math.max(hi, tag618.px, tag618.level);
     }
     var ntMarks = noTradeMarks(scenario);
+    if (showTeachMarks(highlight, trade)) {
+      var alreadyCap = {};
+      ntMarks.forEach(function (m) { if (m.caption) alreadyCap[m.i] = true; });
+      var lookCaps = highlight === "look";
+      pullMarks(scenario).forEach(function (m) {
+        if (m.caption && (alreadyCap[m.i] || lookCaps)) m = { i: m.i, kind: m.kind, px: m.px, caption: null, color: m.color };
+        ntMarks.push(m);
+      });
+    }
     ntMarks.forEach(function (m) {
       [m.px, m.px2, m.px3, m.level].forEach(function (px) {
         if (px != null && isFinite(px)) { lo = Math.min(lo, px); hi = Math.max(hi, px); }
@@ -2316,7 +2435,10 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
           parts.push('<circle cx="' + x + '" cy="' + yAt(m.px) + '" r="6" fill="' + col + '" stroke="#f0d060" stroke-width="1.5"/>');
         }
         if (m.caption && !is618bar) {
-          parts.push('<text x="' + x + '" y="' + (padT + plotH + 20) + '" text-anchor="middle" fill="' + col + '" font-size="10" font-weight="700" font-family="system-ui,sans-serif">' + esc(m.caption) + "</text>");
+          var capX = x, capA = "middle";
+          if (x > padL + plotW * 0.72) { capA = "end"; capX = Math.min(x + bodyW, padL + plotW); }
+          else if (x < padL + plotW * 0.18) { capA = "start"; capX = Math.max(x - bodyW, padL); }
+          parts.push('<text x="' + capX + '" y="' + (padT + plotH + 20) + '" text-anchor="' + capA + '" fill="' + col + '" font-size="10" font-weight="700" font-family="system-ui,sans-serif">' + esc(m.caption) + "</text>");
         }
       });
       if (isTg) {
@@ -2337,18 +2459,28 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       var ran = lookRanInfo(scenario);
       addCap(marks.br, ran.ago != null && ran.ago >= 2 ? ("Break · " + ran.ago + " ago") : "Break");
       addCap(marks.tag, "38.2");
-      addCap(marks.pull, "8 EMA");
-      addCap(marks.now, "Now");
+      addCap(marks.pull, pullCaption(marks));
+      if (marks.pull !== marks.now) addCap(marks.now, "Now");
       Object.keys(caps).forEach(function (k) {
         var i = Number(k);
-        parts.push('<text x="' + xAt(i) + '" y="' + (padT + plotH + 20) + '" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="700" font-family="system-ui,sans-serif">' + esc(caps[k].join(" · ")) + "</text>");
+        var x = xAt(i);
+        var anchor = "middle";
+        if (x > padL + plotW * 0.72) { anchor = "end"; x = Math.min(x + bodyW, padL + plotW); }
+        else if (x < padL + plotW * 0.18) { anchor = "start"; x = Math.max(x - bodyW, padL); }
+        parts.push('<text x="' + x + '" y="' + (padT + plotH + 20) + '" text-anchor="' + anchor + '" fill="#e6edf3" font-size="10" font-weight="700" font-family="system-ui,sans-serif">' + esc(caps[k].join(" · ")) + "</text>");
       });
+      var cueY = padT + 14;
       if (ran && ran.dist != null && isFinite(ran.dist) && (lookWant(scenario) === "N" || ran.at618 || (ran.ago != null && ran.ago >= 2))) {
         var cue = (ran.dist >= 0 ? "+" : "") + fmtAtrPct(ran.dist) + " from trigger";
         if (atFullRange(scenario)) cue += " · already at 1 ATR (full range)";
         else if (tagged618SinceBreak(scenario)) cue += " · 61.8 already tagged — GG done (stale)";
         else if (ran.at618) cue += " · mid-range 61.8 (first target, not too late)";
-        parts.push('<text x="' + (padL + plotW - 4) + '" y="' + (padT + 14) + '" text-anchor="end" fill="#e3b341" font-size="12" font-weight="700" font-family="system-ui,sans-serif">' + esc(cue) + "</text>");
+        parts.push('<text x="' + (padL + plotW - 4) + '" y="' + cueY + '" text-anchor="end" fill="#e3b341" font-size="12" font-weight="700" font-family="system-ui,sans-serif">' + esc(cue) + "</text>");
+        cueY += 14;
+      }
+      if (marks.kind === "trigger" && marks.miss8 != null && marks.miss8 > 0.01) {
+        var evCue = "Trigger recapture · 8 is " + fmtPts(marks.miss8) + " pts " + (marks.side === "short" ? "above the high" : "below the low");
+        parts.push('<text x="' + (padL + plotW - 4) + '" y="' + cueY + '" text-anchor="end" fill="#e3b341" font-size="12" font-weight="700" font-family="system-ui,sans-serif">' + esc(evCue) + "</text>");
       }
     } else {
       parts.push('<text x="' + (decX - 4) + '" y="' + (padT + plotH + 20) + '" text-anchor="end" fill="#8b949e" font-size="11" font-family="system-ui,sans-serif">Decision</text>');
@@ -3060,14 +3192,14 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (setup.action === "N") return "";
     if (okStop) {
       return setup.kind === "gg"
-        ? "Taught stop: a close back beyond the 8, because this was a Golden Gate (ribbon pullback) entry."
+        ? "Taught stop: a close back beyond the 8, because this was a Golden Gate entry."
         : "Taught stop: a close back inside the trigger, because this was a first-close trigger entry.";
     }
     if (picked === "pdc") {
       return "Previous close is a valid wider pivot stop when you need a little room, but the taught first stop here is " + (setup.kind === "gg" ? "a close back beyond the 8." : "a close back inside the trigger.");
     }
     if (setup.kind === "gg") return "That stop doesn't match a Golden Gate entry. Use a close back beyond the 8 (the ribbon you pulled back to). The trigger stop is for a first-close trigger entry.";
-    return "That stop doesn't match a trigger entry. Use a close back inside the trigger. The 8 is the stop for a Golden Gate / ribbon pullback.";
+    return "That stop doesn't match a trigger entry. Use a close back inside the trigger. The 8 is the stop for a Golden Gate.";
   }
 
   function l2Simulate(s, side, stopPx, tgtPx, from) {
@@ -3479,7 +3611,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       overlay = ses.outcome;
       shown = Math.max(shown, (ses.outcome.hitBar || N_VIS) + 1);
     }
-    var hl = ses.phase === "outcome" ? "fence" : "fence";
+    var hl = ses.phase === "outcome" ? "look" : "fence";
     html += '<div class="stage">';
     html += '<div class="chart">' + drawChart(s, shown, hl, false, overlay) + '<div class="caption">' + esc(s.name) + " · " + esc(s.when) + " · " + shown + " bars shown · $1.50 round-trip in the sim</div>" + renderFlag(s.id, "trade") + "</div>";
 
@@ -3497,7 +3629,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       html += "</div>";
     } else if (ses.phase === "stop") {
       html += '<p class="prompt">Where is your stop?</p>';
-      html += '<p class="muted">Trigger entry: a close back inside the trigger. Golden Gate (ribbon pullback): a close back beyond the 8. Previous close is a valid wider pivot stop when you need a little room — not the first taught choice.</p><div class="opts">';
+      html += '<p class="muted">Trigger entry: a close back inside the trigger. Golden Gate (ribbon pullback or trigger recapture): a close back beyond the 8. Previous close is a valid wider pivot stop when you need a little room — not the first taught choice.</p><div class="opts">';
       l2StopLevels(s, ses.pick).forEach(function (o) {
         html += '<button type="button" class="opt tone-none" data-l2stop="' + esc(o.v) + '">' + esc(o.l) + "</button>";
       });
@@ -3797,10 +3929,13 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         var chk = ggChecks(s);
         body += '<div class="gg-checks">';
         body += '<div class="chk ' + (chk.tagged ? "yes" : "no") + '">' + (chk.tagged ? "✓" : "✗") + " 38.2 tagged</div>";
-        body += '<div class="chk ' + (chk.pulled ? "yes" : "no") + '">' + (chk.pulled ? "✓" : "✗") + " Pulled back to the 8 EMA</div>";
-        body += '<div class="chk ' + (chk.held ? "yes" : "no") + '">' + (chk.held ? "✓" : "✗") + " Held, still beyond the trigger</div>";
+        body += '<div class="chk ' + (chk.pulled ? "yes" : "no") + '">' + (chk.pulled ? "✓" : "✗") + " " + esc(pullCheckLabel(chk)) + "</div>";
+        body += '<div class="chk ' + (chk.held ? "yes" : "no") + '">' + (chk.held ? "✓" : "✗") + " Held the 8, still beyond the trigger</div>";
         body += "</div>";
-        if (chk.yes) body += "<p>Golden Gate (38.2) is tagged, with a ribbon pullback that held, and 61.8 has not been tagged yet. About a 60% chance of reaching 61.8 (the Golden FIB). Once 61.8 has been tagged, the Golden Gate is done (stale), even if price comes back.</p>";
+        if (chk.yes && chk.kind === "trigger") {
+          var missBit = (chk.miss8 != null && chk.miss8 > 0.01) ? (" The " + (chk.side === "short" ? "high" : "low") + " missed the 8 by " + fmtPts(chk.miss8) + " points — a trigger recapture still counts.") : "";
+          body += "<p>Golden Gate (38.2) is tagged. The pull here is a recapture of the " + (chk.side === "short" ? "put" : "call") + " trigger, not a wick of the 8." + missBit + " The close held, and 61.8 has not been tagged yet. About a 60% chance of reaching 61.8 (the Golden FIB). Once 61.8 has been tagged, the Golden Gate is done (stale), even if price comes back.</p>";
+        } else if (chk.yes) body += "<p>Golden Gate (38.2) is tagged, with a ribbon pullback that held, and 61.8 has not been tagged yet. About a 60% chance of reaching 61.8 (the Golden FIB). Once 61.8 has been tagged, the Golden Gate is done (stale), even if price comes back.</p>";
         else body += "<p>" + esc(lessonLines(s, "gg").join(" ")) + "</p>";
       } else {
         lines.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
@@ -3957,6 +4092,11 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     noTradeReason: function (s) { s = s || current() || l2Current(); return s ? noTradeReason(s) : null; },
     noTradeDetail: function (s) { s = s || current() || l2Current(); return s ? noTradeDetail(s) : null; },
     noTradeMarks: noTradeMarks,
+    pullEvent: pullEvent,
+    pullMarks: pullMarks,
+    pullCaption: pullCaption,
+    ggChecks: ggChecks,
+    lookMarks: lookMarks,
     setupWhy: setupWhy,
     first618Tag: first618Tag,
     currentCross: currentCross,
