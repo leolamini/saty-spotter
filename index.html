@@ -2068,7 +2068,8 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       replay: emptyReplay(),
       manage: emptyManage(),
       vomy: emptyVomy(),
-      mtf: emptyMtf()
+      mtf: emptyMtf(),
+      review: emptyReview()
     };
   }
 
@@ -2153,7 +2154,7 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       if (!p || !Array.isArray(p.logs)) return emptySave();
       /* v is 1 for original and migrated saves. Missing new fields are filled in place. */
       if (p.v != null && p.v !== 1 && p.v !== 2) return emptySave();
-      return rebuildSpacing({
+      var s = rebuildSpacing({
         v: 1,
         logs: p.logs || [],
         charts: p.charts || [],
@@ -2176,6 +2177,8 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
         vomy: migrateVomy(p.vomy),
         mtf: migrateMtf(p.mtf)
       });
+      s.review = migrateReview(p.review, s);
+      return s;
     } catch (e) {
       return emptySave();
     }
@@ -2372,6 +2375,20 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     var mastered = stats.filter(function (s) { return s.lvl === "mastered"; });
     weak.sort(function (a, b) { return a.rank - b.rank || a.n - b.n; });
     var nShown = (sv.shown || []).length;
+    var due = reviewDueList(sv);
+    if (due.length && nShown % 2 === 0) {
+      return { skill: due[0].skill || "fresh-pull", hard: false, speed: false, skillOnly: true, review: true, n: Math.min(6, due.length) };
+    }
+    var shaky = stats.filter(function (st) {
+      var rec = lastSkillAcc(sv, st.id, 20);
+      return rec.n >= 8 && rec.acc < 0.7;
+    });
+    if (shaky.length && nShown % 2 === 1) {
+      shaky.sort(function (a, b) {
+        return lastSkillAcc(sv, a.id, 20).acc - lastSkillAcc(sv, b.id, 20).acc || a.n - b.n;
+      });
+      return { skill: shaky[0].id, hard: false, speed: false, skillOnly: true };
+    }
     if (!weak.length) {
       var i = nShown % stats.length;
       return { skill: stats[i].id, hard: true, speed: true, skillOnly: false };
@@ -3023,6 +3040,10 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
   function questions() {
     var s = current();
     if (!s) return ["qlook"];
+    if (ui.review) {
+      var dueQs = reviewDueList(save).filter(function (it) { return it.id === s.id && it.q; }).map(function (it) { return it.q; });
+      if (dueQs.length) return dueQs;
+    }
     if ((ui.focus || ui.skillOnly) && ui.skill) return [skillQid(ui.skill)];
     return guidedQueueFor(s, save.logs);
   }
@@ -3152,18 +3173,25 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     ui.speed = !focus && !!opts.speed;
     ui.skillOnly = !focus && !!opts.skillOnly;
     ui.contrast = !!opts.contrast || (!!focus && ui.skill === "fresh-pull");
+    ui.review = !!opts.review;
     ui.timeout = false;
     ui.quiz = null;
     var exclude = [];
     if (seed) exclude.push(seed.id);
     var n = opts.n || (focus ? 5 : 1);
     var charts;
-    if (ui.contrast || (focus && ui.skill === "fresh-pull")) {
-      charts = pickLookContrast(ALL, exclude, n);
-    } else if (ui.skill === "no-trade") {
-      charts = pickNoTradeSet(ALL, exclude, n);
-    } else {
-      charts = pickCharts(ALL, ui.skill, exclude, n, !!focus, ui.hard);
+    if (ui.review) {
+      charts = pickReviewCharts(exclude, n);
+      if (!charts.length) ui.review = false;
+    }
+    if (!charts || !charts.length) {
+      if (ui.contrast || (focus && ui.skill === "fresh-pull")) {
+        charts = pickLookContrast(ALL, exclude, n);
+      } else if (ui.skill === "no-trade") {
+        charts = pickNoTradeSet(ALL, exclude, n);
+      } else {
+        charts = pickCharts(ALL, ui.skill, exclude, n, !!focus, ui.hard);
+      }
     }
     if (!charts.length) charts = ALL.slice(0, n);
     ui.ids = charts.map(function (s) { return s.id; });
@@ -3183,7 +3211,7 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
 
   function nextFreshChart() {
     var choice = chooseSkill(save);
-    startPlay(false, choice.skill, current(), { hard: choice.hard, speed: choice.speed, skillOnly: choice.skillOnly, contrast: choice.contrast });
+    startPlay(false, choice.skill, current(), { hard: choice.hard, speed: choice.speed, skillOnly: choice.skillOnly, contrast: choice.contrast, review: choice.review, n: choice.n });
   }
 
   function begin() {
@@ -3195,7 +3223,7 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     }
     if (restoreSession()) return;
     var choice = chooseSkill(save);
-    startPlay(false, choice.skill, null, { hard: choice.hard, speed: choice.speed, skillOnly: choice.skillOnly, contrast: choice.contrast });
+    startPlay(false, choice.skill, null, { hard: choice.hard, speed: choice.speed, skillOnly: choice.skillOnly, contrast: choice.contrast, review: choice.review, n: choice.n });
   }
 
   function startSpeedClock() {
@@ -3237,6 +3265,7 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       save.misses = save.misses.concat([{ id: s.id, q: q, got: got, want: want, tag: s.tag }]);
     }
     var sk = skillOfLog(log);
+    recordReview(s.id, q, correct, sk);
     if (sk) save.skills = touchSkill(save, sk, correct);
     save.points += correct ? 3 : 0;
     if (correct) {
@@ -3538,6 +3567,11 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     } else {
       lines.push("Accuracy: " + pct(MT.ok, MT.n) + " (" + MT.ok + "/" + MT.n + ")");
     }
+    var dueN = reviewDueCount(save);
+    var waitN = reviewWaitingCount(save);
+    lines.push("");
+    lines.push("Review queue");
+    lines.push("Due today: " + dueN + "  ·  waiting (not yet due): " + waitN + "  ·  until " + REVIEW_STREAK + " in a row right");
     var ex = save.exam || emptyExam();
     lines.push("");
     lines.push("Saty answer key (separate from recognition)");
@@ -3600,6 +3634,123 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       }
     } catch (e3) {}
     fallbackTextarea();
+  }
+
+
+  /* ---------- Stricter spaced review ---------- */
+  var REVIEW_STREAK = 2;
+
+  function addDays(stamp, n) {
+    var p = String(stamp || todayStamp()).split("-");
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    d.setDate(d.getDate() + n);
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  function reviewKey(id, q) { return id + "|" + q; }
+
+  function emptyReview() { return { items: {}, seeded: false }; }
+
+  function seedReviewFromHistory(d, s) {
+    var last = {};
+    (s.logs || []).forEach(function (l) {
+      if (!l || !l.id || !l.q) return;
+      last[reviewKey(l.id, l.q)] = l;
+    });
+    Object.keys(last).forEach(function (k) {
+      var l = last[k];
+      if (l.correct) return;
+      d.items[k] = { id: l.id, q: l.q, streak: 0, due: todayStamp(), skill: skillOfLog(l) || "" };
+    });
+  }
+
+  function migrateReview(raw, s) {
+    var d = emptyReview();
+    if (raw && typeof raw === "object") {
+      d.items = raw.items && typeof raw.items === "object" ? Object.assign({}, raw.items) : {};
+      d.seeded = !!raw.seeded;
+    }
+    if (!d.seeded) {
+      seedReviewFromHistory(d, s || {});
+      d.seeded = true;
+    }
+    return d;
+  }
+
+  function reviewDueList(sv, day) {
+    day = day || todayStamp();
+    var items = (sv.review && sv.review.items) || {};
+    var out = [];
+    Object.keys(items).forEach(function (k) {
+      var it = items[k];
+      if (it && it.id && it.due && it.due <= day) out.push(it);
+    });
+    return out;
+  }
+
+  function reviewWaitingCount(sv, day) {
+    day = day || todayStamp();
+    var items = (sv.review && sv.review.items) || {};
+    var n = 0;
+    Object.keys(items).forEach(function (k) {
+      var it = items[k];
+      if (it && it.id && it.due && it.due > day) n += 1;
+    });
+    return n;
+  }
+
+  function reviewDueCount(sv) { return reviewDueList(sv).length; }
+
+  function recordReview(id, q, correct, skill) {
+    if (!id || !q) return;
+    if (!save.review) save.review = emptyReview();
+    save.review.seeded = true;
+    var k = reviewKey(id, q);
+    var items = Object.assign({}, save.review.items || {});
+    var it = items[k] || { id: id, q: q, streak: 0, due: todayStamp(), skill: skill || "" };
+    if (correct) {
+      it.streak = (it.streak || 0) + 1;
+      if (it.streak >= REVIEW_STREAK) {
+        delete items[k];
+      } else {
+        it.due = addDays(todayStamp(), 1);
+        it.skill = skill || it.skill;
+        items[k] = it;
+      }
+    } else {
+      it.streak = 0;
+      it.due = todayStamp();
+      it.skill = skill || it.skill;
+      items[k] = it;
+    }
+    save.review.items = items;
+  }
+
+  function pickReviewCharts(exclude, n) {
+    n = n || 6;
+    var due = reviewDueList(save);
+    var out = [];
+    var seen = {};
+    (exclude || []).forEach(function (id) { seen[id] = true; });
+    var i, s;
+    for (i = 0; i < due.length && out.length < n; i++) {
+      if (seen[due[i].id]) continue;
+      s = byId(ALL, due[i].id);
+      if (!s) continue;
+      seen[due[i].id] = true;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function startReviewDue() {
+    var due = reviewDueList(save);
+    if (!due.length) return false;
+    var skill = due[0].skill || "fresh-pull";
+    startPlay(false, skill, null, { skillOnly: true, review: true, n: Math.min(6, due.length) });
+    return true;
   }
 
   /* ---------- Vomy drill (graded from the Vomy video, conservative labels only) ---------- */
@@ -5050,6 +5201,8 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     var st = ALL.filter(function (s) { return s.tag === "st"; })[0];
     var ex = ALL.filter(function (s) { return s.tag === "ex"; })[0];
     var html = '<div class="learn">';
+    var dueNow = reviewDueCount(save);
+    if (dueNow) html += '<button type="button" class="opt tone-long" id="btn-review">Review due (' + dueNow + ")</button>";
     html += '<button type="button" class="opt tone-long" id="btn-notrade">Trade or no trade?</button>';
     html += '<button type="button" class="opt tone-none" id="btn-manage">Manage the trade</button>';
     html += '<button type="button" class="opt tone-none" id="btn-vomy">Vomy drill</button>';
@@ -5126,7 +5279,7 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
             ? "Saty answer key · scored separately"
           : ("You\'re working on: " + esc(skillLabel(skill)) + " · " + esc(meter) +
             (ui.focus ? " · focus " + ui.setLogs.filter(function (c) { return c.allOk; }).length + "/" + ui.setLogs.length : "") +
-            (ui.speed && ui.phase === "ask" ? ' · <span class="timer' + (ui.speedLeft && ui.speedLeft <= 3 ? " warn" : "") + '" id="timer">' + (ui.speedLeft || 8) + "s</span>" : ""))) +
+            (ui.speed && ui.phase === "ask" ? ' · <span class="timer' + (ui.speedLeft && ui.speedLeft <= 3 ? " warn" : "") + '" id="timer">' + (ui.speedLeft || 8) + "s</span>" : "") + (ui.review ? " · reviewing misses" : "") + (reviewDueCount(save) ? " · review due " + reviewDueCount(save) : ""))) +
       "</div>";
 
     if (ui.view === "trade") {
@@ -5308,6 +5461,17 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
       clearL2Timer();
       if (save.l2) save.l2.resume = false;
       startPlay(true, "no-trade", null, { skillOnly: true, n: 8 });
+      render();
+    });
+    hook("btn-review", function () {
+      clearAuto();
+      clearSpeed();
+      clearL2Timer();
+      if (save.l2) save.l2.resume = false;
+      if (!startReviewDue()) {
+        ui.view = "learn";
+        snapshot();
+      }
       render();
     });
     hook("btn-manage", function () {
@@ -5540,6 +5704,15 @@ d22|Q|ba1i|26nm|w0k|16|27|zttddiddiiiiiiiiiiiiddiiiii|XXXXXXUUUUUUUUUUUUUUUUUUUU
     mtfWant: mtfWant,
     daySignalBar: daySignalBar,
     completedHourly: completedHourly,
+    reviewDueList: function () { return reviewDueList(save); },
+    reviewDueCount: function () { return reviewDueCount(save); },
+    reviewWaitingCount: function () { return reviewWaitingCount(save); },
+    recordReview: recordReview,
+    startReviewDue: function () { startReviewDue(); render(); },
+    chooseSkill: function () { return chooseSkill(save); },
+    REVIEW_STREAK: REVIEW_STREAK,
+    addDays: addDays,
+    todayStamp: todayStamp,
     step: function (v) {
       onPick(v);
       clearAuto();
