@@ -80,6 +80,8 @@ body {
   margin: 0 0 12px;
 }
 .opts { display: flex; flex-direction: column; gap: 10px; }
+.opts.aside { gap: 8px; }
+.opts.aside .opt { min-height: 44px; padding: 10px 12px; font-size: 15px; }
 .opt {
   width: 100%;
   min-height: 52px;
@@ -1659,6 +1661,99 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     return "No trade. Reason: " + why + ".";
   }
 
+  var ASIDE_OPTS = [
+    { v: "stale", l: "Stale (61.8 tagged)" },
+    { v: "hold", l: "Didn't hold the 8 or trigger" },
+    { v: "twist", l: "Twisted/tangled ribbon or chop" },
+    { v: "inside", l: "Inside the triggers" },
+    { v: "late", l: "Too late (1 ATR run)" },
+    { v: "fade", l: "Counter-trend / fade" },
+    { v: "other", l: "Other" },
+    { v: "none", l: "No — this is a trade" }
+  ];
+
+  function asideLabel(v) {
+    var i;
+    for (i = 0; i < ASIDE_OPTS.length; i++) if (ASIDE_OPTS[i].v === v) return ASIDE_OPTS[i].l;
+    return v || "";
+  }
+
+  function asideReason(s) {
+    var setup = l2SetupOf(s);
+    if (!s || !setup || setup.action !== "N") return "none";
+    var why = noTradeReason(s);
+    if (why === "too late at 1 ATR") return "late";
+    if (why === "ribbon against") return "fade";
+    if (why === "no clear trend" || why === "twisted or flat ribbon") return "twist";
+    if (why === "stale/past 61.8") return "stale";
+    if (why === "didn't hold the ribbon") return "hold";
+    if (why === "no trigger break") return "inside";
+    return "other";
+  }
+
+  function asideWhyLine(s) {
+    var r = asideReason(s);
+    if (r === "none") return "There is no stand-aside reason. This is a trade.";
+    if (r === "stale") return "Stand aside: 61.8 has already been tagged since this break, so the Golden Gate is done (stale).";
+    if (r === "hold") return "Stand aside: it tagged 38.2 but did not hold the 8.";
+    if (r === "twist") return "Stand aside: the ribbon is twisted, tangled, or still chop — no clear trend.";
+    if (r === "inside") return "Stand aside: price is still inside the call and put triggers. No first close yet.";
+    if (r === "late") return "Stand aside: the last close is already at 1 ATR (full range). Too late to chase.";
+    if (r === "fade") return "Stand aside: that would be a fade of a stacked ribbon. Don't trade against the ribbon.";
+    return "Stand aside: " + noTradeDetail(s);
+  }
+
+  function emptyAside() {
+    return { ok: 0, n: 0, by: {}, logs: [] };
+  }
+
+  function migrateAside(raw) {
+    var d = emptyAside();
+    if (!raw || typeof raw !== "object") return d;
+    d.ok = Number(raw.ok) || 0;
+    d.n = Number(raw.n) || 0;
+    d.by = raw.by && typeof raw.by === "object" ? raw.by : {};
+    d.logs = Array.isArray(raw.logs) ? raw.logs : [];
+    return d;
+  }
+
+  function asideState() {
+    if (!save.aside) save.aside = emptyAside();
+    return save.aside;
+  }
+
+  function recordAside(want, got, src, id) {
+    var A = asideState();
+    var ok = want === got;
+    A.n += 1;
+    if (ok) A.ok += 1;
+    if (!A.by[want]) A.by[want] = { ok: 0, n: 0 };
+    A.by[want].n += 1;
+    if (ok) A.by[want].ok += 1;
+    A.logs = (A.logs || []).concat([{ id: id || "", want: want, got: got, ok: ok, src: src || "", at: Date.now() }]);
+    if (A.logs.length > 300) A.logs = A.logs.slice(-300);
+    return ok;
+  }
+
+  function renderAsideOpts(mode) {
+    var html = '<div class="opts aside" id="aside-opts">';
+    ASIDE_OPTS.forEach(function (o) {
+      if (mode === "fix" && o.v === "none") return;
+      var tone = o.v === "none" ? "long" : "none";
+      html += '<button type="button" class="opt tone-' + tone + '" data-aside="' + esc(o.v) + '">' + esc(o.l) + "</button>";
+    });
+    html += "</div>";
+    return html;
+  }
+
+  function clearAsideUi() {
+    ui.asideFix = false;
+    ui.asideWant = null;
+    ui.asidePick = null;
+    ui.asideFixMiss = null;
+    ui.asideFixed = false;
+  }
+
   function showTeachMarks(highlight, trade) {
     if (highlight === "look" || highlight === "gate") return true;
     if (trade) return true;
@@ -1946,7 +2041,8 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       session: null,
       l2: emptyL2(),
       flags: [],
-      exam: emptyExam()
+      exam: emptyExam(),
+      aside: emptyAside()
     };
   }
 
@@ -2047,7 +2143,8 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         session: p.session && typeof p.session === "object" ? p.session : null,
         l2: migrateL2(p.l2),
         flags: migrateFlags(p.flags),
-        exam: migrateExam(p.exam)
+        exam: migrateExam(p.exam),
+        aside: migrateAside(p.aside)
       });
     } catch (e) {
       return emptySave();
@@ -2678,6 +2775,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
   }
 
   function startPlay(focus, skill, seed, opts) {
+    clearAsideUi();
     opts = opts || {};
     ui.skill = skill || chooseSkill(save).skill;
     ui.focus = !!focus;
@@ -2805,6 +2903,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     ui.ok = false;
     ui.qIndex = 0;
     ui.lessonSkill = null;
+    clearAsideUi();
 
     if (ui.focus) {
       var okN = ui.setLogs.filter(function (c) { return c.allOk; }).length;
@@ -2843,6 +2942,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       ui.timeout = false;
       ui.phase = "ask";
       ui.startMs = Date.now();
+      clearAsideUi();
       snapshot();
       render();
       return;
@@ -2851,6 +2951,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
   }
 
   function onGotIt() {
+    if (ui.asideFix) return;
     /* After a miss: if not already in focus, enter a 5-chart focus set on that skill. */
     var s = current();
     var sk = ui.lessonSkill || (s ? skillOfLog({ q: qidNow(), tag: s.tag }) : null) || lowestSkill(save);
@@ -2870,6 +2971,47 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     }
     /* already in focus: finish this chart and continue the set */
     closeChartAndAdvance();
+  }
+
+  function onAsidePlay(v) {
+    if (ui.phase !== "ask" || qidNow() !== "qnt") return;
+    var s = current();
+    if (!s) return;
+    var want = asideReason(s);
+    recordAside(want, v, "qnt", s.id);
+    ui.asidePick = v;
+    var ans = v === "none" ? "T" : "N";
+    var wantTN = truthOf(s, "qnt");
+    recordAnswer(ans, false);
+    if (wantTN === "N" && v !== want) {
+      ui.asideFix = true;
+      ui.asideWant = want;
+      ui.asideFixMiss = null;
+      ui.ok = false;
+      ui.phase = "lesson";
+      clearAuto();
+    }
+    snapshot();
+    render();
+    if (ui.ok) {
+      autoTimer = setTimeout(function () {
+        autoTimer = null;
+        afterCorrect();
+      }, AUTO_OK_MS);
+    }
+  }
+
+  function onAsideFixPlay(v) {
+    if (!ui.asideFix) return;
+    if (v === ui.asideWant) {
+      ui.asideFix = false;
+      ui.asideFixed = true;
+      ui.asideFixMiss = null;
+    } else {
+      ui.asideFixMiss = v;
+    }
+    snapshot();
+    render();
   }
 
   function onPick(v) {
@@ -2976,6 +3118,19 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       } else {
         lines.push("Common decision errors: none yet");
       }
+    }
+    var A = save.aside || emptyAside();
+    lines.push("");
+    lines.push("Stand-aside reasons");
+    if (!A.n) {
+      lines.push("No stand-aside checks yet.");
+    } else {
+      lines.push("Accuracy: " + pct(A.ok, A.n) + " (" + A.ok + "/" + A.n + ")");
+      ASIDE_OPTS.forEach(function (o) {
+        var b = A.by && A.by[o.v];
+        if (!b || !b.n) return;
+        lines.push("• " + o.l + ": " + pct(b.ok, b.n) + " (" + b.ok + "/" + b.n + ")");
+      });
     }
     var ex = save.exam || emptyExam();
     lines.push("");
@@ -3311,7 +3466,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       if (!cur || cur.phase !== "replay") { clearL2Timer(); return; }
       if (cur.shown >= N_VIS) {
         clearL2Timer();
-        cur.phase = "decide";
+        cur.phase = "aside";
         cur.shown = N_VIS;
         l2Snap();
         render();
@@ -3328,7 +3483,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     var ses = l2State().session;
     if (!ses) return;
     ses.shown = N_VIS;
-    ses.phase = "decide";
+    ses.phase = "aside";
     l2Snap();
     render();
   }
@@ -3338,11 +3493,42 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     var ses = l2State().session;
     if (!ses) return;
     if (ses.shown >= N_VIS) {
-      ses.phase = "decide";
+      ses.phase = "aside";
     } else {
       ses.shown += 1;
-      if (ses.shown >= N_VIS) ses.phase = "decide";
+      if (ses.shown >= N_VIS) ses.phase = "aside";
       else ses.phase = "replay";
+    }
+    l2Snap();
+    render();
+  }
+
+  function l2AsidePick(v) {
+    var ses = l2State().session;
+    var s = l2Current();
+    if (!ses || !s || ses.phase !== "aside") return;
+    ses.aside = v;
+    recordAside(asideReason(s), v, "l2", s.id);
+    if (v === "none") {
+      ses.phase = "side";
+      l2Snap();
+      render();
+      return;
+    }
+    l2FinishPass(s, ses, l2SetupOf(s), "N");
+  }
+
+  function l2AsideFix(v) {
+    var ses = l2State().session;
+    var s = l2Current();
+    if (!ses || !s || ses.phase !== "aside-fix") return;
+    var want = ses.asideWant || asideReason(s);
+    if (v === want) {
+      ses.asideFixed = true;
+      ses.asideFixMiss = null;
+      ses.phase = "outcome";
+    } else {
+      ses.asideFixMiss = v;
     }
     l2Snap();
     render();
@@ -3351,7 +3537,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
   function l2Decide(pick) {
     var ses = l2State().session;
     var s = l2Current();
-    if (!ses || !s || ses.phase !== "decide") return;
+    if (!ses || !s || (ses.phase !== "decide" && ses.phase !== "side")) return;
     ses.pick = pick;
     ses.entryEnd = ses.shown;
     var setup = l2SetupOf(s);
@@ -3389,9 +3575,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
 
   function l2FinishPass(s, ses, setup, pick) {
     var okSetup = l2GradeSetup(setup, pick);
-    var process = { setup: okSetup, stop: true, target: true };
+    var wantAside = asideReason(s);
+    var okAside = ses.aside == null ? (pick === "N" || pick === "W" ? true : wantAside === "none") : ses.aside === wantAside;
+    var process = { setup: okSetup, stop: true, target: true, aside: okAside };
     var gradeN = 1;
     var gradeOk = okSetup ? 1 : 0;
+    if (ses.aside != null) { gradeN += 1; if (okAside) gradeOk += 1; }
     var rec = {
       id: s.id,
       pick: pick,
@@ -3408,11 +3597,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (!okSetup) {
       if (setup.action !== "N" && (pick === "N" || pick === "W")) l2Error("Passed on a " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + " (" + (setup.action === "L" ? "long" : "short") + ")");
     }
-    ses.phase = "outcome";
     ses.outcome = rec;
+    ses.asideWant = wantAside;
     ses.note = okSetup
-      ? (setup.action === "N" ? "Right to stand aside. " + noTradeDetail(s) : "You passed. That setup was a trade. " + setupWhy(s))
+      ? (setup.action === "N" ? "Right to stand aside. " + (okAside ? asideWhyLine(s) : "The reason is " + asideLabel(wantAside) + ". " + noTradeDetail(s)) : "You passed. That setup was a trade. " + setupWhy(s))
       : (setup.action === "N" ? "There was no trade here. " + noTradeDetail(s) : "That was a real " + (setup.action === "L" ? "long" : "short") + " " + (setup.kind === "gg" ? "Golden Gate" : "trigger") + ". Passing missed it. " + setupWhy(s));
+    ses.phase = (setup.action === "N" && !okAside) ? "aside-fix" : "outcome";
     l2Snap();
     render();
   }
@@ -3431,9 +3621,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     var stop = stops.filter(function (o) { return o.v === ses.stop; })[0] || stops[0];
     var tgt = tgts.filter(function (o) { return o.v === ses.target; })[0] || tgts[0];
     var sim = l2Simulate(s, side, stop.px, tgt.px, N_VIS);
-    var process = { setup: okSetup, stop: okStop, target: okTgt };
+    var wantAside = asideReason(s);
+    var okAside = ses.aside == null ? wantAside === "none" : ses.aside === wantAside;
+    var process = { setup: okSetup, stop: okStop, target: okTgt, aside: okAside };
     var gradeN = 3;
     var gradeOk = (okSetup ? 1 : 0) + (okStop ? 1 : 0) + (okTgt ? 1 : 0);
+    if (ses.aside != null) { gradeN += 1; if (okAside) gradeOk += 1; }
     var rec = {
       id: s.id,
       pick: side,
@@ -3470,11 +3663,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
           ? "Setup, stop, and target all match the rules."
           : "";
     var stopWhy = l2StopWhy(setup, ses.stop, okStop);
-    ses.phase = "outcome";
     ses.outcome = rec;
+    ses.asideWant = wantAside;
     ses.note = (praise ? praise + " " : "") + stopWhy;
-    if (setup.action === "N") ses.note = (ses.note ? ses.note + " " : "") + noTradeDetail(s);
+    if (setup.action === "N") ses.note = (ses.note ? ses.note + " " : "") + noTradeDetail(s) + (okAside ? "" : " Tap the stand-aside reason before you continue.");
     else ses.note = (ses.note ? ses.note + " " : "") + setupWhy(s);
+    ses.phase = (setup.action === "N" && !okAside) ? "aside-fix" : "outcome";
     l2Snap();
     render();
   }
@@ -3523,6 +3717,10 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     ses.entryEnd = null;
     ses.outcome = null;
     ses.note = "";
+    ses.aside = null;
+    ses.asideWant = null;
+    ses.asideFixed = false;
+    ses.asideFixMiss = null;
     l2Snap();
     l2PlayBars();
     render();
@@ -3577,7 +3775,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     if (!ses) {
       html += '<div class="stage">';
       html += "<h2>Level 2 — Trade it</h2>";
-      html += "<p class=\"prompt\">Replay a real 15-minute tape, then take the trade or stand aside. Stops and targets follow Saty's rules. A good decision still counts if the outcome is a loser.</p>";
+      html += "<p class=\"prompt\">Replay a real 15-minute tape. First ask: any reason to stand aside? Only then take a side. Stops and targets follow Saty's rules. A good decision still counts if the outcome is a loser.</p>";
       if (!unlocked) html += '<p class="muted">Q1 is not yet at 80% over the last 20. You can still practice trades.</p>';
       html += '<p class="muted">Stops fill when a 15-minute bar closes through them, not on a wick (our structured futures fill rule; Saty also uses ribbon and previous-close stops with a little room). First official target is mid-range 61.8 for both a trigger and a Golden Gate; 38.2 is a first scale, 1 ATR is the ideal runner. Earlier practice P&amp;L used wick fills and a 38.2 trigger target; new trades use closes and 61.8.</p>';
       html += '<p class="ran-cue">Practice P&amp;L: ' + esc(fmtR(L.rSum)) + " · " + esc(fmtUsd(L.rSum * L2_PLAN_R)) + " at $20/R (1 MNQ, $1.50 costs) · process " + l2ProcessPct(L) + "%</p>";
@@ -3607,11 +3805,12 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     }
     var shown = Math.max(1, Math.min(ses.shown || 16, s.bars.length));
     var overlay = null;
-    if (ses.phase === "outcome" && ses.outcome && (ses.outcome.pick === "L" || ses.outcome.pick === "S")) {
+    var reviewing = ses.phase === "outcome" || ses.phase === "aside-fix";
+    if (reviewing && ses.outcome && (ses.outcome.pick === "L" || ses.outcome.pick === "S")) {
       overlay = ses.outcome;
       shown = Math.max(shown, (ses.outcome.hitBar || N_VIS) + 1);
     }
-    var hl = ses.phase === "outcome" ? "look" : "fence";
+    var hl = reviewing ? "look" : "fence";
     html += '<div class="stage">';
     html += '<div class="chart">' + drawChart(s, shown, hl, false, overlay) + '<div class="caption">' + esc(s.name) + " · " + esc(s.when) + " · " + shown + " bars shown · $1.50 round-trip in the sim</div>" + renderFlag(s.id, "trade") + "</div>";
 
@@ -3619,6 +3818,16 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       html += '<p class="prompt">Watch the tape. No future bars are shown.</p>';
       html += '<button type="button" class="opt tone-none" id="l2-next">Next bar</button>';
       html += '<button type="button" class="opt tone-none" id="l2-skip">Skip to the decision</button>';
+    } else if (ses.phase === "aside") {
+      html += '<p class="prompt">Any reason to stand aside?</p>';
+      html += '<p class="muted">Check this first. Long and short stay locked until you answer.</p>';
+      html += renderAsideOpts("pick");
+    } else if (ses.phase === "side") {
+      html += '<p class="prompt">No stand-aside reason — which side?</p>';
+      html += '<div class="opts">';
+      html += '<button type="button" class="opt tone-long" id="l2-L">Take long</button>';
+      html += '<button type="button" class="opt tone-short" id="l2-S">Take short</button>';
+      html += "</div>";
     } else if (ses.phase === "decide") {
       html += '<p class="prompt">Decision point. Take the trade, wait, or call it no trade today?</p>';
       html += '<div class="opts">';
@@ -3640,7 +3849,7 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         html += '<button type="button" class="opt tone-none" data-l2tgt="' + esc(o.v) + '">' + esc(o.l) + "</button>";
       });
       html += "</div>";
-    } else if (ses.phase === "outcome") {
+    } else if (ses.phase === "outcome" || ses.phase === "aside-fix") {
       var rec = ses.outcome || {};
       var setup = l2SetupOf(s);
       var taken = rec.pick === "L" || rec.pick === "S";
@@ -3653,14 +3862,21 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
       }
       html += '<div class="gg-checks">';
       html += '<div class="chk ' + (rec.process && rec.process.setup ? "yes" : "no") + '">' + (rec.process && rec.process.setup ? "✓" : "✗") + " Setup</div>";
+      if (rec.process && rec.process.aside != null) html += '<div class="chk ' + (rec.process.aside ? "yes" : "no") + '">' + (rec.process.aside ? "✓" : "✗") + " Stand-aside reason</div>";
       if (taken) {
         html += '<div class="chk ' + (rec.process && rec.process.stop ? "yes" : "no") + '">' + (rec.process && rec.process.stop ? "✓" : "✗") + " Stop</div>";
         html += '<div class="chk ' + (rec.process && rec.process.target ? "yes" : "no") + '">' + (rec.process && rec.process.target ? "✓" : "✗") + " Target</div>";
       }
       html += "</div>";
       if (ses.note) html += "<p>" + esc(ses.note) + "</p>";
-      html += "<p class=\"muted\">Taught answer: " + (setup.action === "N" ? "no trade (" + esc(noTradeReason(s)) + ")" : (setup.action === "L" ? "long " : "short ") + (setup.kind === "gg" ? "Golden Gate (first official target 61.8, stop at the 8)" : "trigger (first official target 61.8, stop inside the trigger)")) + ".</p>";
-      html += '<button type="button" class="opt tone-none" id="l2-continue">Continue</button>';
+      html += "<p class=\"muted\">Taught answer: " + (setup.action === "N" ? "no trade (" + esc(asideLabel(asideReason(s))) + " — " + esc(noTradeReason(s)) + ")" : (setup.action === "L" ? "long " : "short ") + (setup.kind === "gg" ? "Golden Gate (first official target 61.8, stop at the 8)" : "trigger (first official target 61.8, stop inside the trigger)")) + ".</p>";
+      if (ses.phase === "aside-fix") {
+        html += '<p class="prompt">Tap the stand-aside reason before you continue.</p>';
+        if (ses.asideFixMiss) html += '<div class="verdict bad">Not ' + esc(asideLabel(ses.asideFixMiss)) + ". Try again.</div>";
+        html += renderAsideOpts("fix");
+      } else {
+        html += '<button type="button" class="opt tone-none" id="l2-continue">Continue</button>';
+      }
     }
     html += '<button type="button" class="learn-link" id="l2-back" style="margin-top:12px">Back to spotting</button>';
     html += "</div>";
@@ -3884,7 +4100,11 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     var hl = lookLesson ? "look" : (ggLesson ? "look" : (ui.phase === "lesson" && ui.lessonSkill ? skillHighlight(ui.lessonSkill) : highlightFor(q)));
     var body = renderChart(s, hl, false);
 
-    if (ui.phase === "ask") {
+    if (ui.phase === "ask" && q === "qnt") {
+      body += '<p class="prompt">Any reason to stand aside?</p>';
+      body += '<p class="muted">This is the trade-or-no-trade check. Pick a reason, or say this is a trade.</p>';
+      body += renderAsideOpts("pick");
+    } else if (ui.phase === "ask") {
       body += '<p class="prompt">' + esc(promptOf(q)) + "</p>";
       body += '<div class="opts" id="opts">' + renderButtons(q) + "</div>";
     } else if (ui.phase === "feedback") {
@@ -3941,7 +4161,11 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
         lines.forEach(function (line) { body += "<p>" + esc(line) + "</p>"; });
         if (TAG_WHY[s.tag]) body += "<p>" + esc(TAG_WHY[s.tag]) + "</p>";
       }
-      if (!(lookLesson && ui.quiz === "bars")) {
+      if (q === "qnt" && ui.asideFix) {
+        body += '<p class="prompt">Tap the stand-aside reason before you continue.</p>';
+        if (ui.asideFixMiss) body += '<div class="verdict bad">Not ' + esc(asideLabel(ui.asideFixMiss)) + ". Try again.</div>";
+        body += renderAsideOpts("fix");
+      } else if (!(lookLesson && ui.quiz === "bars")) {
         body += '<button type="button" class="opt tone-none" id="got-it">Got it</button>';
       }
       body += "</div>";
@@ -4046,6 +4270,19 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     hook("l2-W", function () { l2Decide("W"); });
     hook("l2-N", function () { l2Decide("N"); });
     hook("l2-continue", function () { l2AfterOutcome(); });
+    var asides = document.querySelectorAll("[data-aside]");
+    for (var ai = 0; ai < asides.length; ai++) {
+      asides[ai].onclick = (function (v) {
+        return function () {
+          if (ui.view === "trade") {
+            var ses = l2State().session;
+            if (ses && ses.phase === "aside-fix") l2AsideFix(v);
+            else l2AsidePick(v);
+          } else if (ui.asideFix) onAsideFixPlay(v);
+          else onAsidePlay(v);
+        };
+      })(asides[ai].getAttribute("data-aside"));
+    }
     var stops = document.querySelectorAll("[data-l2stop]");
     for (var si = 0; si < stops.length; si++) {
       stops[si].onclick = (function (v) { return function () { l2ChooseStop(v); }; })(stops[si].getAttribute("data-l2stop"));
@@ -4092,6 +4329,11 @@ Q|d0fr|279e|k2p|LT|C|GFNt|tr|1b|h|X3ELhgGEAZkBmAEDVqMBkAECMKkBfAGKAbUBXgagAacBWA
     noTradeReason: function (s) { s = s || current() || l2Current(); return s ? noTradeReason(s) : null; },
     noTradeDetail: function (s) { s = s || current() || l2Current(); return s ? noTradeDetail(s) : null; },
     noTradeMarks: noTradeMarks,
+    asideReason: asideReason,
+    asideState: asideState,
+    asideLabel: asideLabel,
+    l2Aside: l2AsidePick,
+    l2AsideFix: l2AsideFix,
     pullEvent: pullEvent,
     pullMarks: pullMarks,
     pullCaption: pullCaption,
